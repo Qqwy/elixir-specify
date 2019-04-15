@@ -83,15 +83,19 @@ defmodule Confy do
       sources
       |> Enum.map(&load_source(&1, config_module))
       |> fn sources_configs_tuples -> reject_and_warn_unloadable_sources(config_module, sources_configs_tuples) end.()
-      |> fn sources_configs -> list_of_configs2config_of_lists(defaults, sources_configs) end.()
+      |> fn sources_configs -> list_of_configs2config_of_lists(begin_accumulator, sources_configs) end.()
 
     if options.explain do
       sources_configs
     else
-      missing_required_fields = sources_configs |> Enum.filter(fn {key, value} -> value == [] end)
+      missing_required_fields =
+        sources_configs
+        |> Enum.filter(fn {key, value} -> value == [] end)
+        |> Enum.into(%{})
+
       if Enum.any?(missing_required_fields) do
         field_names = Map.keys(missing_required_fields)
-        raise options.missing_fields_error, "Missing required fields for `#{config_module}`: `#{field_names |> Enum.join(", ")}`."
+        raise options.missing_fields_error, "Missing required fields for `#{config_module}`: `#{field_names |> Enum.map(&inspect/1) |> Enum.join(", ")}`."
       else
         # TODO raise on failure to parse
         parsers = config_module.__parsers__()
