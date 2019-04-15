@@ -1,4 +1,25 @@
 defmodule Confy.Parsers do
+  @moduledoc """
+  Simple functions to parse strings to datatypes commonly used during configuration.
+
+  These functions can be used as parser/validator function in a call to `Confy.Schema.field`,
+  by using their shorthand name (`:integer` as shorthand for `&Confy.Parsers.integer/1`).
+
+  (Of course, using their longhand name works as well.)
+
+
+  ## Defining your own parser function
+
+  A parser function receives the to-be-parsed/validated value as input,
+  and should return `{:ok, parsed_val}` on success,
+  or `{:error, reason}` on failure.
+
+  Be aware that depending on where the configuration is loaded from,
+  the to-be-parsed value might be a binary string,
+  or already the Elixir type you want to convert it to.
+
+  """
+
   def integer(int) when is_integer(int), do: {:ok, int}
 
   def integer(binary) when is_binary(binary) do

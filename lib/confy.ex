@@ -14,6 +14,10 @@ defmodule Confy do
   defmodule Schema do
     @doc """
     Specifies a field that is part of the configuration struct.
+
+    Can/should only be called inside a call to `Confy.defconfig`.
+
+
     Supported options are:
 
     - `default:`, supplies a default value to this field. If not set, the configuration field is set to be _required_.
@@ -110,7 +114,6 @@ defmodule Confy do
         field_names = Map.keys(missing_required_fields)
         raise options.missing_fields_error, "Missing required fields for `#{config_module}`: `#{field_names |> Enum.map(&inspect/1) |> Enum.join(", ")}`."
       else
-        # TODO raise on failure to parse
         parsers = config_module.__parsers__()
         sources_configs
         |> Enum.map(fn {name, values} ->
@@ -133,18 +136,21 @@ defmodule Confy do
         Confy.Options,
       sources:
         options[:sources] ||
-          Application.get_env(:confy, :sources) ||
-          [],
+        Process.get(:confy, [])[:sources] ||
+        Application.get_env(:confy, :sources) ||
+        [],
 
       missing_fields_error:
         options[:missing_fields_error] ||
-          Application.get_env(:confy, :missing_fields_error) ||
-          Confy.MissingRequiredFieldsError,
+        Process.get(:confy, [])[:missing_fields_error] ||
+        Application.get_env(:confy, :missing_fields_error) ||
+        Confy.MissingRequiredFieldsError,
 
       parsing_error:
         options[:parsing_error] ||
-          Application.get_env(:confy, :parsing_error) ||
-          Confy.ParsingError,
+        Process.get(:confy, [])[:parsing_error] ||
+        Application.get_env(:confy, :parsing_error) ||
+        Confy.ParsingError,
       explain:
         options[:explain] ||
         false
@@ -307,6 +313,7 @@ defmodule Confy do
 
   # Replaces simplified atom parsers with
   # an actual reference to the parser function in `Confy.Parsers`.
+  # NOTE: I dislke the necessity of `Code.eval_quoted` here, but do not currently know of another way.
   defp normalize_parser(parser) when is_atom(parser) do
     case Confy.Parsers.__info__(:functions)[parser] do
       nil -> raise ArgumentError, "Parser shorthand `#{inspect(parser)}` was not recognized. Only atoms representing names of functions that live in `Confy.Parsers` are."
