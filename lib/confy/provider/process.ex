@@ -1,12 +1,15 @@
 defmodule Confy.Provider.Process do
   defstruct [:key]
-  def new(key) do
+  def new(key \\ nil) do
     %__MODULE__{key: key}
   end
 
   defimpl Confy.Provider do
+    def load(%Confy.Provider.Process{key: nil}, module) do
+      load(%Confy.Provider.Process{key: module}, module)
+    end
     def load(%Confy.Provider.Process{key: key}, _module) do
-      case Process.get(:key, :there_is_no_confy_configuration_in_this_process_dictionary!) do
+      case Process.get(key, :there_is_no_confy_configuration_in_this_process_dictionary!) do
         map when is_map(map) ->
           {:ok, map}
         list when is_list(list) ->

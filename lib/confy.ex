@@ -37,7 +37,7 @@ defmodule Confy do
   end
 
 
-  defmacro defconfig(do: block) do
+  defmacro defconfig(options \\ [], do: block) do
     quote do
       import Confy.Schema
       Module.register_attribute(__MODULE__, :config_fields, accumulate: true)
@@ -45,11 +45,14 @@ defmodule Confy do
         unquote(block)
       after
         config_fields = Module.get_attribute(__MODULE__, :config_fields) |> Enum.reverse
-        existing_moduledoc = Module.delete_attribute(__MODULE__, :moduledoc) || ""
-        line_number = 0
+        {line_number, existing_moduledoc} = Module.delete_attribute(__MODULE__, :moduledoc) || {0, ""}
         Module.put_attribute(__MODULE__, :moduledoc, {line_number, existing_moduledoc <> Confy.__config_doc__(config_fields)})
 
         defstruct(Confy.__struct_fields__(config_fields))
+
+        @field_names Confy.__field_names__(config_fields)
+        def __field_names__(), do: @field_names
+
         @defaults Confy.__defaults__(config_fields)
         def __defaults__(), do: @defaults
 
@@ -59,7 +62,13 @@ defmodule Confy do
         @parsers Confy.__parsers__(config_fields)
         def __parsers__(), do: @parsers
 
-        def load(options \\ []), do: Confy.load(__MODULE__, options)
+        @doc """
+        Loads and normalizes the #{__MODULE__} configuration structure from the various sources.
+
+        For more information about the options this function supports, see
+        `Confy.load/2` and `Confy.Options`
+        """
+        def load(options \\ []), do: Confy.load(__MODULE__, options ++ unquote(options))
 
         :ok
       end
@@ -67,10 +76,14 @@ defmodule Confy do
   end
 
   def load(config_module, options \\ []) do
-    # TODO fetch from other source
-    # TODO parse `options`.
-    overrides = options[:overrides] || []
+    overrides = (options[:overrides] || []) |> Enum.to_list
     options = parse_options(config_module, options)
+
+    improper_overrides = MapSet.difference(MapSet.new(Keyword.keys(overrides)), config_module.__field_names__)
+
+    if(Enum.any?(improper_overrides)) do
+      raise ArgumentError, "The following fields passed as `:overrides` are not part of `#{inspect(config_module)}`'s fields: `#{improper_overrides |> Enum.map(&inspect/1) |> Enum.join(", ")}`."
+    end
 
     # Values explicitly passed in are always the last, highest priority source.
     sources = options.sources ++ [overrides]
@@ -138,7 +151,7 @@ defmodule Confy do
     }
   end
   defp parse_options(config_module, options) do
-    Confy.Options.load(options)
+    Confy.Options.load(overrides: options)
   end
 
   defp list_of_configs2config_of_lists(defaults, list_of_configs) do
@@ -210,7 +223,7 @@ defmodule Confy do
       |> Enum.reduce("", fn {name, parser, documentation, options}, acc ->
           doc = """
 
-          #### #{name}
+          ### #{name}
 
           #{documentation || "ASDF"}
 
@@ -233,7 +246,10 @@ defmodule Confy do
         end)
 
     """
-    ### Configuration structure documentation:
+    ## Configuration structure documentation:
+
+    This configuration was made using the Confy library.
+    It contains the following fields:
 
     #{acc}
     """
@@ -268,6 +284,13 @@ defmodule Confy do
     |> Enum.map(fn {name, _, _, _} ->
       name
     end)
+    |> MapSet.new()
+  end
+
+  @doc false
+  def __field_names__(config_fields) do
+    config_fields
+    |> Enum.map(fn {name, _, _, _} -> name end)
     |> MapSet.new()
   end
 
