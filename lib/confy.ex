@@ -41,6 +41,17 @@ defmodule Confy do
   end
 
 
+  @doc """
+  Defines a configuration structure in the current module.
+
+  Fields are added to this configuration structure by calling `Confy.Schema.field/3`
+  (which can be called just as `field` because `Confy.Schema` is autoamatically imported into the
+  inner context of the call to `defconfig`.)
+
+  The `options` that can be passed to this module are used as defaults for the options passed to a call to `Confy.load/2` or `YourModule.load/1`.
+
+  See also `Confy.Schema.field/3`
+  """
   defmacro defconfig(options \\ [], do: block) do
     quote do
       import Confy.Schema
@@ -254,7 +265,7 @@ defmodule Confy do
     """
     ## Configuration structure documentation:
 
-    This configuration was made using the Confy library.
+    This configuration was made using the `Confy` library.
     It contains the following fields:
 
     #{acc}
