@@ -4,6 +4,6 @@ defmodule Foo do
     @doc "The user's (first) name."
     field :name, :string, default: "Bobby"
 
-    field :age, :integer, default: 42
+    field :age, :integer
   end
 end

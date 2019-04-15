@@ -11,8 +11,6 @@ defmodule Confy do
     defexception [:message]
   end
 
-  @default_sources []
-
   defmodule Schema do
     @doc """
     Specifies a field that is part of the configuration struct.
@@ -72,12 +70,10 @@ defmodule Confy do
     # TODO fetch from other source
     # TODO parse `options`.
     overrides = options[:overrides] || []
-    sources = options[:sources] || Application.get_env(config_module, :sources) || Application.get_env(Confy, :sources) || @default_sources
-    missing_fields_error = options[:missing_fields_error] || Application.get_env(config_module, :missing_fields_error) || Application.get_env(Confy, :missing_fields_error) || Confy.MissingRequiredFieldsError
-    parsing_error = options[:parsing_error] || Application.get_env(config_module, :parsing_error) || Application.get_env(Confy, :parsing_error) || Confy.ParsingError
+    options = parse_options(config_module, options)
 
     # Values explicitly passed in are always the last, highest priority source.
-    sources = sources ++ [overrides]
+    sources = options.sources ++ [overrides]
 
     defaults = for {name, val} <- config_module.__defaults__, into: %{}, do: {name, [val]}
     requireds = for name <- config_module.__required_fields__, into: %{}, do: {name, []}
@@ -89,13 +85,13 @@ defmodule Confy do
       |> fn sources_configs_tuples -> reject_and_warn_unloadable_sources(config_module, sources_configs_tuples) end.()
       |> fn sources_configs -> list_of_configs2config_of_lists(defaults, sources_configs) end.()
 
-    if options[:explain] do
+    if options.explain do
       sources_configs
     else
       missing_required_fields = sources_configs |> Enum.filter(fn {key, value} -> value == [] end)
       if Enum.any?(missing_required_fields) do
         field_names = Map.keys(missing_required_fields)
-        raise missing_fields_error, "Missing required fields for `#{config_module}`: `#{field_names |> Enum.join(", ")}`."
+        raise options.missing_fields_error, "Missing required fields for `#{config_module}`: `#{field_names |> Enum.join(", ")}`."
       else
         # TODO raise on failure to parse
         parsers = config_module.__parsers__()
@@ -103,7 +99,7 @@ defmodule Confy do
         |> Enum.map(fn {name, values} ->
           case parsers[name].(hd(values)) do
             {:ok, value} -> {name, value}
-            {:error, reason} -> raise parsing_error, reason
+            {:error, reason} -> raise options.parsing_error, reason
             other ->
               raise ArgumentError, "Improper Confy configuration parser result. Parser `#{parsers[name]}` is supposed to return either {:ok, val} or {:error, reason} but instead, `#{inspect(other)}` was returned."
           end
@@ -111,6 +107,34 @@ defmodule Confy do
         |> fn config -> struct(config_module, config) end.()
       end
     end
+  end
+
+  # Catch bootstrapping-case
+  defp parse_options(Confy.Options, options) do
+    %{
+      __struct__:
+        Confy.Options,
+      sources:
+        options[:sources] ||
+          Application.get_env(:confy, :sources) ||
+          [],
+
+      missing_fields_error:
+        options[:missing_fields_error] ||
+          Application.get_env(:confy, :missing_fields_error) ||
+          Confy.MissingRequiredFieldsError,
+
+      parsing_error:
+        options[:parsing_error] ||
+          Application.get_env(:confy, :parsing_error) ||
+          Confy.ParsingError,
+      explain:
+        options[:explain] ||
+        false
+    }
+  end
+  defp parse_options(config_module, options) do
+    Confy.Options.load(options)
   end
 
   defp list_of_configs2config_of_lists(defaults, list_of_configs) do

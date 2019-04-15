@@ -8,7 +8,6 @@ defmodule Confy.Parsers do
     end
   end
   def integer(other), do: {:error, "#{inspect(other)} is not an integer"}
-  end
 
   def float(float) when is_float(float), do: float
   def float(int) when is_integer(int), do: 1.0 * int
@@ -18,8 +17,7 @@ defmodule Confy.Parsers do
       :error -> {:error, "the binary `#{binary}` is not a float"}
     end
   end
-  def float(other), do: {:error, "#{inspect(other) is not a float}"}
-  end
+  def float(other), do: {:error, "`#{inspect(other)}` is not a float"}
 
   def string(binary) when is_binary(binary), do: {:ok, binary}
   def string(thing) do
