@@ -1,4 +1,5 @@
 defmodule Confy.MixProject do
+  @source_url "https://github.com/Qqwy/elixir_confy"
   use Mix.Project
 
   def project do
@@ -7,7 +8,12 @@ defmodule Confy.MixProject do
       version: "0.1.0",
       elixir: "~> 1.7",
       start_permanent: Mix.env() == :prod,
-      deps: deps()
+      deps: deps(),
+      elixirc_paths: elixirc_paths(Mix.env),
+      aliases: aliases(),
+      description: description(),
+      package: package(),
+      source_url: @source_url,
     ]
   end
 
@@ -21,9 +27,26 @@ defmodule Confy.MixProject do
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
-      # {:dep_from_hexpm, "~> 0.3.0"},
-      # {:dep_from_git, git: "https://github.com/elixir-lang/my_dep.git", tag: "0.1.0"},
-      {:ex_doc, "~> 0.19", only: :docs, runtime: false},
+      {:ex_doc, "~> 0.19", only: [:docs], runtime: false},
+      {:inch_ex, ">= 0.0.0", only: [:docs]},     # Inch CI documentation quality test.
+    ]
+  end
+
+  defp elixirc_paths(_), do: ["lib"]
+
+  defp description do
+    """
+    Comfortable, Explicit, multi-Layered configuration specifications
+    """
+  end
+
+  defp package do
+    [# These are the default files included in the package
+      name: :confy,
+      files: ["lib", "mix.exs", "README*", "LICENSE"],
+      maintainers: ["Wiebe-Marten Wijnja/Qqwy"],
+      licenses: ["MIT"],
+      links: %{"GitHub" => @source_url}
     ]
   end
 end
