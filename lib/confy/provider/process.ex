@@ -16,7 +16,7 @@ defmodule Confy.Provider.Process do
           {:ok, Enum.into(list, %{})}
         :there_is_no_confy_configuration_in_this_process_dictionary! ->
           {:error, :not_found}
-        other ->
+        _other ->
           {:error, :malformed}
       end
     end
@@ -33,7 +33,7 @@ defimpl Confy.Provider, for: PID do
         {:ok, Enum.into(list, %{})}
       :error ->
         {:error, :not_found}
-      other ->
+      _other ->
         {:error, :malformed}
     end
   end

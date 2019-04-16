@@ -175,7 +175,7 @@ defmodule Confy do
   defp prevent_missing_required_fields!(config_module, sources_configs, options) do
     missing_required_fields =
       sources_configs
-      |> Enum.filter(fn {key, value} -> value == [] end)
+      |> Enum.filter(fn {_key, value} -> value == [] end)
       |> Enum.into(%{})
 
     if Enum.any?(missing_required_fields) do
@@ -233,7 +233,7 @@ defmodule Confy do
         false
     }
   end
-  defp parse_options(config_module, options), do: Confy.Options.load(overrides: options)
+  defp parse_options(_config_module, options), do: Confy.Options.load(overrides: options)
 
   # Turns a list of Access-implementations into a map of lists.
   # In the end, empty values will look like `key: []`.
@@ -295,7 +295,7 @@ defmodule Confy do
   @doc false
   def __struct_fields__(config_fields) do
     config_fields
-    |> Enum.map(fn {name, parser, documentation, options} ->
+    |> Enum.map(fn {name, _parser, _documentation, options} ->
       {name, options[:default]}
     end)
   end
@@ -348,13 +348,13 @@ defmodule Confy do
   # Builds a map of fields with default values.
   def __defaults__(config_fields) do
     config_fields
-    |> Enum.filter(fn {name, _parser, _documentation, options} ->
+    |> Enum.filter(fn {_name, _parser, _documentation, options} ->
       case Access.fetch(options, :default) do
         {:ok, _} -> true
         :error -> false
       end
     end)
-    |> Enum.map(fn {name, parser, _documentation, options} ->
+    |> Enum.map(fn {name, _parser, _documentation, options} ->
       {name, options[:default]}
     end)
     |> Enum.into(%{})
@@ -364,7 +364,7 @@ defmodule Confy do
   # Builds a MapSet of all the required fields
   def __required_fields__(config_fields) do
     config_fields
-    |> Enum.filter(fn {name, _parser, _documentation, options} ->
+    |> Enum.filter(fn {_name, _parser, _documentation, options} ->
       case Access.fetch(options, :default) do
         :error -> true
         _ -> false

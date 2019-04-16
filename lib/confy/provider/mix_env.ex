@@ -20,7 +20,7 @@ defmodule Confy.Provider.MixEnv do
           {:ok, Enum.into(list, %{})}
         :there_is_no_confy_configuration_in_this_application_environment! ->
           {:error, :not_found}
-        other ->
+        _other ->
           {:error, :malformed}
       end
     end
