@@ -1,6 +1,11 @@
 # Confy
 
-Comfortable, Explicit, Multi-Layered configuration in Elixir:
+[![hex.pm version](https://img.shields.io/hexpm/v/confy.svg)](https://hex.pm/packages/confy)
+[![Build Status](https://travis-ci.org/Qqwy/elixir_confy.svg?branch=master)](https://travis-ci.org/Qqwy/elixir_confy)
+[![Inline docs](http://inch-ci.org/github/qqwy/elixir_confy.svg)](http://inch-ci.org/github/qqwy/elixir_confy)
+
+
+Comfortable, Explicit, Multi-Layered and Well-Documented configuration specifications in Elixir:
 
 - Configuration is converted to a struct, with fields being parsed to their appropriate types.
 - Specify a stack of sources to fetch the configuration from.

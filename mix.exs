@@ -35,7 +35,7 @@ defmodule Confy.MixProject do
 
   defp description do
     """
-    Comfortable, Explicit, multi-Layered configuration specifications
+    Comfortable, Explicit, Multi-Layered and Well-Documented configuration specifications
     """
   end
 
