@@ -60,7 +60,7 @@ defmodule Confy do
   in how they fetch the configuration for the module. For instance, configuration
   might be lazily fetched, when knowing what field names exist beforehand.
 
-  `YourModule.__confy__/1` supports the following parameters:
+  `YourModule.__confy__/1` supports the following publicly usable parameters:
 
   - `__confy__(:field_names)` returns a MapSet of atoms, one per field in the configuration structure.
   - `__confy__(:defaults)` returns a Map containing only the `field_name => value`s of field names having default values.
@@ -74,23 +74,33 @@ defmodule Confy do
       try do
         unquote(block)
       after
-        config_fields = Module.get_attribute(__MODULE__, :config_fields) |> Enum.reverse
+        config_fields =
+          Module.get_attribute(__MODULE__, :config_fields)
+          |> Enum.reverse
+
         {line_number, existing_moduledoc} = Module.delete_attribute(__MODULE__, :moduledoc) || {0, ""}
         Module.put_attribute(__MODULE__, :moduledoc, {line_number, existing_moduledoc <> Confy.__config_doc__(config_fields)})
 
         defstruct(Confy.__struct_fields__(config_fields))
 
+        # Reflection; part of 'public API' for Config Providers,
+        # but not of public API for consumers of '__MODULE__'.
         @field_names Confy.__field_names__(config_fields)
         @defaults Confy.__defaults__(config_fields)
         @required_fields Confy.__required_fields__(config_fields)
         @parsers Confy.__parsers__(config_fields)
+
+        # Super secret private reflection; doing this at compile-time speeds up `load`.
+        @la_defaults for {name, val} <- @defaults, into: %{}, do: {name, [val]}
+        @la_requireds for name <- @required_fields, into: %{}, do: {name, []}
+        @loading_accumulator Map.merge(@la_defaults, @la_requireds)
+
         @doc false
-        # Reflection; part of 'public API' for Config Providers,
-        # but not of public API for consumers of '__MODULE__'.
         def __confy__(:field_names), do: @field_names
         def __confy__(:defaults), do: @defaults
         def __confy__(:required_fields), do: @required_fields
         def __confy__(:parsers), do: @parsers
+        def __confy__(:__loading_begin_accumulator__), do: @loading_accumulator
 
         @doc """
         Loads, parses, and normalizes the configuration of `#{inspect(__MODULE__)}`, based on the current source settings, returning the result as a struct.
@@ -114,55 +124,79 @@ defmodule Confy do
   and how it can be configured further.
   """
   def load(config_module, options \\ []) do
-    overrides = (options[:overrides] || []) |> Enum.to_list
+    overrides =
+      (options[:overrides] || [])
+      |> Enum.to_list
+
+    prevent_improper_overrides!(config_module, overrides)
+
     options = parse_options(config_module, options)
-
-    improper_overrides = MapSet.difference(MapSet.new(Keyword.keys(overrides)), config_module.__confy__(:field_names))
-
-    if(Enum.any?(improper_overrides)) do
-      raise ArgumentError, "The following fields passed as `:overrides` are not part of `#{inspect(config_module)}`'s fields: `#{improper_overrides |> Enum.map(&inspect/1) |> Enum.join(", ")}`."
-    end
 
     # Values explicitly passed in are always the last, highest priority source.
     sources = options.sources ++ [overrides]
-
-    defaults = for {name, val} <- config_module.__confy__(:defaults), into: %{}, do: {name, [val]}
-    requireds = for name <- config_module.__confy__(:required_fields), into: %{}, do: {name, []}
-    begin_accumulator = Map.merge(defaults, requireds)
-
-    sources_configs =
-      sources
-      |> Enum.map(&load_source(&1, config_module))
-      |> fn sources_configs_tuples -> reject_and_warn_unloadable_sources(config_module, sources_configs_tuples) end.()
-      |> fn sources_configs -> list_of_configs2config_of_lists(begin_accumulator, sources_configs) end.()
+    sources_configs = load_sources_configs(config_module, sources)
 
     if options.explain do
       sources_configs
     else
-      missing_required_fields =
-        sources_configs
-        |> Enum.filter(fn {key, value} -> value == [] end)
-        |> Enum.into(%{})
+      prevent_missing_required_fields!(config_module, sources_configs, options)
 
-      if Enum.any?(missing_required_fields) do
-        field_names = Map.keys(missing_required_fields)
-        raise options.missing_fields_error, "Missing required fields for `#{config_module}`: `#{field_names |> Enum.map(&inspect/1) |> Enum.join(", ")}`."
-      else
-        parsers = config_module.__confy__(:parsers)
-        sources_configs
-        |> Enum.map(fn {name, values} ->
-          case parsers[name].(hd(values)) do
-            {:ok, value} -> {name, value}
-            {:error, reason} -> raise options.parsing_error, reason
-            other ->
-              raise ArgumentError, "Improper Confy configuration parser result. Parser `#{parsers[name]}` is supposed to return either {:ok, val} or {:error, reason} but instead, `#{inspect(other)}` was returned."
-          end
-        end)
-        |> fn config -> struct(config_module, config) end.()
-      end
+      parsers = config_module.__confy__(:parsers)
+
+      sources_configs
+      |> Enum.map(&try_load_and_parse!(&1, parsers, options))
+      |> fn config -> struct(config_module, config) end.()
     end
   end
 
+  # Raises if `overrides` contains keys that are not part of the configuration structure of `config_module`.
+  defp prevent_improper_overrides!(config_module, overrides) do
+    improper_overrides =
+      overrides
+      |> Keyword.keys
+      |> MapSet.new
+      |> MapSet.difference(config_module.__confy__(:field_names))
+
+    if(Enum.any?(improper_overrides)) do
+      raise ArgumentError, "The following fields passed as `:overrides` are not part of `#{inspect(config_module)}`'s fields: `#{improper_overrides |> Enum.map(&inspect/1) |> Enum.join(", ")}`."
+    end
+  end
+
+  # Raises appropriate error if required fields of `config_module` are missing in `sources_configs`.
+  defp prevent_missing_required_fields!(config_module, sources_configs, options) do
+    missing_required_fields =
+      sources_configs
+      |> Enum.filter(fn {key, value} -> value == [] end)
+      |> Enum.into(%{})
+
+    if Enum.any?(missing_required_fields) do
+      field_names = Map.keys(missing_required_fields)
+      raise options.missing_fields_error, "Missing required fields for `#{config_module}`: `#{field_names |> Enum.map(&inspect/1) |> Enum.join(", ")}`."
+    end
+  end
+
+  # Loads the listed `sources` in turn, warning for missing ones.
+  defp load_sources_configs(config_module, sources) do
+    sources
+    |> Enum.map(&load_source(&1, config_module))
+    |> reject_and_warn_unloadable_sources(config_module)
+    |> list_of_configs2config_of_lists(config_module)
+  end
+
+  # Attempts to parse the highest-priority value of a given `name`.
+  # Upon failure, raises an appropriate error.
+  defp try_load_and_parse!({name, values}, parsers, options) do
+    case parsers[name].(hd(values)) do
+      {:ok, value} -> {name, value}
+      {:error, reason} -> raise options.parsing_error, reason
+      other ->
+        raise ArgumentError, "Improper Confy configuration parser result. Parser `#{parsers[name]}` is supposed to return either {:ok, val} or {:error, reason} but instead, `#{inspect(other)}` was returned."
+    end
+  end
+
+
+  # Parses `options` into a normalized `Confy.Options` struct.
+  defp parse_options(config_module, options)
   # Catch bootstrapping-case
   defp parse_options(Confy.Options, options) do
     %{
@@ -190,13 +224,16 @@ defmodule Confy do
         false
     }
   end
-  defp parse_options(config_module, options) do
-    Confy.Options.load(overrides: options)
-  end
+  defp parse_options(config_module, options), do: Confy.Options.load(overrides: options)
 
-  defp list_of_configs2config_of_lists(defaults, list_of_configs) do
+  # Turns a list of Access-implementations into a map of lists.
+  # In the end, empty values will look like `key: []`.
+  # And filled ones like `key: [something | ...]`
+  defp list_of_configs2config_of_lists(list_of_configs, config_module) do
+    begin_accumulator = config_module.__confy__(:__loading_begin_accumulator__)
+
     list_of_configs
-    |> Enum.reduce(defaults, fn config, acc ->
+    |> Enum.reduce(begin_accumulator, fn config, acc ->
       :maps.map(fn key, values_list ->
         case Access.fetch(config, key) do
           {:ok, val} -> [val | values_list]
@@ -210,7 +247,9 @@ defmodule Confy do
     {source, Confy.Provider.load(source, config_module)}
   end
 
-  defp reject_and_warn_unloadable_sources(config_module, sources_configs) do
+  # Logs errors on sources that cannot be found,
+  # and transforms `{source, {:ok, config}} -> config` for all successful configurations.
+  defp reject_and_warn_unloadable_sources(sources_config, config_module) do
     require Logger
     sources_configs
     |> Enum.flat_map(fn
@@ -236,6 +275,7 @@ defmodule Confy do
 
 
   @doc false
+  # Handles the actual work of the `field` macro.
   def __field__(module, name, parser, field_documentation, options) do
     parser = normalize_parser(parser)
     Module.put_attribute(module, :config_fields, {name, parser, field_documentation, options})
@@ -328,6 +368,7 @@ defmodule Confy do
   end
 
   @doc false
+  # Builds a MapSet of all the fields
   def __field_names__(config_fields) do
     config_fields
     |> Enum.map(fn {name, _, _, _} -> name end)
