@@ -249,7 +249,7 @@ defmodule Confy do
 
   # Logs errors on sources that cannot be found,
   # and transforms `{source, {:ok, config}} -> config` for all successful configurations.
-  defp reject_and_warn_unloadable_sources(sources_config, config_module) do
+  defp reject_and_warn_unloadable_sources(sources_configs, config_module) do
     require Logger
     sources_configs
     |> Enum.flat_map(fn
