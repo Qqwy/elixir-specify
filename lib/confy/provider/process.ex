@@ -1,5 +1,14 @@
 defmodule Confy.Provider.Process do
   defstruct [:key]
+  @moduledoc """
+  A Configuration Provider source based on the current process' Process Dictionary.
+  """
+
+  @doc """
+  By default, will try to use `Process.get(YourModule)` to fetch the source's configuration.
+  A different key can be used by supplying a different `key` argument.
+  """
+
   def new(key \\ nil) do
     %__MODULE__{key: key}
   end
@@ -23,6 +32,8 @@ defmodule Confy.Provider.Process do
   end
 end
 
+# TODO: Should we even allow this?
+# Looking into another process' dictionary is probably bad style, isn't it?
 defimpl Confy.Provider, for: PID do
   def load(process, module) do
     {:dictionary, res}= Process.info(process, :dictionary)

@@ -1,6 +1,17 @@
 defmodule Confy.Provider.MixEnv do
+  @moduledoc """
+  A Configuration Provider source based on `Mix.env()` / `Application.get_env`.
+
+  """
   defstruct [:application, :key]
 
+  @doc """
+  By default, will try to use `Application.get_all_env(YourConfigModule)` to fetch the source's configuration.
+  A differnt application name can be used by supplying a different `application` argument.
+
+  If the actual configuration is only inside one of the keys in this application, the second field `key`
+  can also be provided.
+  """
   def new(application \\ nil, key \\ nil) do
     %__MODULE__{application: application, key: key}
   end
