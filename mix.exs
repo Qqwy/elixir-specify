@@ -10,7 +10,6 @@ defmodule Confy.MixProject do
       start_permanent: Mix.env() == :prod,
       deps: deps(),
       elixirc_paths: elixirc_paths(Mix.env),
-      aliases: aliases(),
       description: description(),
       package: package(),
       source_url: @source_url,
