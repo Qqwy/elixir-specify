@@ -121,6 +121,7 @@ If extra information is required about the configuration specification to write 
 ## Roadmap
 
 - Writing Tests
+- Better examples
 - Thinking on how to handle environment variable names (capitalization, prefixes).
 - Environment Variables (System.get_env) provider
 - Stable release
