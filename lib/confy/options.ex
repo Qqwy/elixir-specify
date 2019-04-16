@@ -7,7 +7,7 @@ defmodule Confy.Options do
   ### Metaconfiguration
 
   Besides making it nice and explicit to have the options listed here,
-  `Confy.Options` has itself been defined using `Confy.defconfig`,
+  `Confy.Options` has itself been defined using `Confy.defconfig/2`,
   which means that it (and thus what default options are passed on to to other Confy configurations)
   can be configured in the same way.
 

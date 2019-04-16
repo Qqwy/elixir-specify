@@ -50,7 +50,22 @@ defmodule Confy do
 
   The `options` that can be passed to this module are used as defaults for the options passed to a call to `Confy.load/2` or `YourModule.load/1`.
 
-  See also `Confy.Schema.field/3`
+  See also `Confy.Schema.field/3` and `Confy.Options`
+
+  ## Reflection
+
+  The special function `__confy__/1` will be defined on the module as well. It is not intended to be used
+  by people that want to consume your configuration,
+  but it is there to e.g. allow `Confy.Provider` implementations to be smarter
+  in how they fetch the configuration for the module. For instance, configuration
+  might be lazily fetched, when knowing what field names exist beforehand.
+
+  `YourModule.__confy__/1` supports the following parameters:
+
+  - `__confy__(:field_names)` returns a MapSet of atoms, one per field in the configuration structure.
+  - `__confy__(:defaults)` returns a Map containing only the `field_name => value`s of field names having default values.
+  - `__confy__(:requireds)` returns a MapSet of atoms, one per required field in the configuration structure.
+  - `__confy__(:parsers)` returns a Map of the format `field_name => parser`.
   """
   defmacro defconfig(options \\ [], do: block) do
     quote do
@@ -66,19 +81,19 @@ defmodule Confy do
         defstruct(Confy.__struct_fields__(config_fields))
 
         @field_names Confy.__field_names__(config_fields)
-        def __field_names__(), do: @field_names
-
         @defaults Confy.__defaults__(config_fields)
-        def __defaults__(), do: @defaults
-
         @required_fields Confy.__required_fields__(config_fields)
-        def __required_fields__(), do: @required_fields
-
         @parsers Confy.__parsers__(config_fields)
-        def __parsers__(), do: @parsers
+        @doc false
+        # Reflection; part of 'public API' for Config Providers,
+        # but not of public API for consumers of '__MODULE__'.
+        def __confy__(:field_names), do: @field_names
+        def __confy__(:defaults), do: @defaults
+        def __confy__(:required_fields), do: @required_fields
+        def __confy__(:parsers), do: @parsers
 
         @doc """
-        Loads and normalizes the #{__MODULE__} configuration structure from the various sources.
+        Loads, parses, and normalizes the configuration of `#{inspect(__MODULE__)}`, based on the current source settings, returning the result as a struct.
 
         For more information about the options this function supports, see
         `Confy.load/2` and `Confy.Options`
@@ -90,11 +105,19 @@ defmodule Confy do
     end
   end
 
+  @doc """
+  Loads, parses, and normalizes the configuration of `config_module`, based on the current source settings, returning the result as a struct.
+
+  (This is the more general way of calling `config_module.load/1`).
+
+  See `Confy.Options` for more information of the options that can be supplied to this function,
+  and how it can be configured further.
+  """
   def load(config_module, options \\ []) do
     overrides = (options[:overrides] || []) |> Enum.to_list
     options = parse_options(config_module, options)
 
-    improper_overrides = MapSet.difference(MapSet.new(Keyword.keys(overrides)), config_module.__field_names__)
+    improper_overrides = MapSet.difference(MapSet.new(Keyword.keys(overrides)), config_module.__confy__(:field_names))
 
     if(Enum.any?(improper_overrides)) do
       raise ArgumentError, "The following fields passed as `:overrides` are not part of `#{inspect(config_module)}`'s fields: `#{improper_overrides |> Enum.map(&inspect/1) |> Enum.join(", ")}`."
@@ -103,8 +126,8 @@ defmodule Confy do
     # Values explicitly passed in are always the last, highest priority source.
     sources = options.sources ++ [overrides]
 
-    defaults = for {name, val} <- config_module.__defaults__, into: %{}, do: {name, [val]}
-    requireds = for name <- config_module.__required_fields__, into: %{}, do: {name, []}
+    defaults = for {name, val} <- config_module.__confy__(:defaults), into: %{}, do: {name, [val]}
+    requireds = for name <- config_module.__confy__(:required_fields), into: %{}, do: {name, []}
     begin_accumulator = Map.merge(defaults, requireds)
 
     sources_configs =
@@ -125,7 +148,7 @@ defmodule Confy do
         field_names = Map.keys(missing_required_fields)
         raise options.missing_fields_error, "Missing required fields for `#{config_module}`: `#{field_names |> Enum.map(&inspect/1) |> Enum.join(", ")}`."
       else
-        parsers = config_module.__parsers__()
+        parsers = config_module.__confy__(:parsers)
         sources_configs
         |> Enum.map(fn {name, values} ->
           case parsers[name].(hd(values)) do
