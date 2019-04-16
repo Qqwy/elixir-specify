@@ -8,14 +8,26 @@ defmodule Confy do
   """
 
   defmodule MissingRequiredFieldsError do
+    @moduledoc """
+    Default exception to be raised when a required field is not existent in any configuration source.
+    """
     defexception [:message]
   end
 
   defmodule ParsingError do
+    @moduledoc """
+    Default exception to be raised when it is impossible to parse one of the configuration values.
+
+    (See also `Confy.Parsers`)
+    """
     defexception [:message]
   end
 
   defmodule Schema do
+    @moduledoc """
+    Functions that can be used inside `Confy.defconfig/2`.
+    """
+
     @doc """
     Specifies a field that is part of the configuration struct.
 
