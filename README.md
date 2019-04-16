@@ -80,7 +80,7 @@ iex> Application.put_env(Cosette.CastleOnACloud, :lullaby, "sleep little darling
 config Cosette.CastleOnACloud, lullaby: "sleep little darling"
 ```
 ```elixir
-iex> Cosette.CastleOnACloud.load(sources: [Confy.Provider.MixEnv.new()])
+iex> Cosette.CastleOnACloud.load(sources: [Confy.Provider.MixEnv])
 %Cosette.CastleOnACloud{
   crying_allowed: false,
   floors_to_sweep: 0,
@@ -94,7 +94,7 @@ Rather than passing in the sources when loading the configuration, it often make
 ```elixir
 defmodule Cosette.CastleOnACloud do
   require Confy
-  Confy.defconfig sources: [Confy.Provider.MixEnv.new()] do
+  Confy.defconfig sources: [Confy.Provider.MixEnv] do
     # ...
   end
 end
@@ -122,12 +122,12 @@ If extra information is required about the configuration specification to write 
 
 - Writing Tests
 - Thinking on how to handle environment variable names (capitalization, prefixes).
+- Environment Variables (System.get_env) provider
 - Stable release
 
 ## Possibilities for the future
 
 - (D)ETS provider
-- Environment Variables (System.get_env) provider
 - CLI arguments provider, which could be helpful for defining e.g. Mix tasks.
 - .env files provider.
 - JSON and YML files provider.
