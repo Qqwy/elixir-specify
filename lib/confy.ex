@@ -11,6 +11,10 @@ defmodule Confy do
     defexception [:message]
   end
 
+  defmodule ParsingError do
+    defexception [:message]
+  end
+
   defmodule Schema do
     @doc """
     Specifies a field that is part of the configuration struct.
@@ -149,7 +153,7 @@ defmodule Confy do
       parsers = config_module.__confy__(:parsers)
 
       sources_configs
-      |> Enum.map(&try_load_and_parse!(&1, parsers, options))
+      |> Enum.map(&try_load_and_parse!(&1, parsers, config_module, options))
       |> fn config -> struct(config_module, config) end.()
     end
   end
@@ -190,12 +194,12 @@ defmodule Confy do
 
   # Attempts to parse the highest-priority value of a given `name`.
   # Upon failure, raises an appropriate error.
-  defp try_load_and_parse!({name, values}, parsers, options) do
+  defp try_load_and_parse!({name, values}, parsers, config_module, options) do
     case parsers[name].(hd(values)) do
       {:ok, value} -> {name, value}
-      {:error, reason} -> raise options.parsing_error, reason
+      {:error, reason} -> raise options.parsing_error, reason <> " (required for loading the field `#{inspect(name)}` of `#{inspect(config_module)}`)"
       other ->
-        raise ArgumentError, "Improper Confy configuration parser result. Parser `#{parsers[name]}` is supposed to return either {:ok, val} or {:error, reason} but instead, `#{inspect(other)}` was returned."
+        raise ArgumentError, "Improper Confy configuration parser result. Parser `#{inspect(parsers[name])}` is supposed to return either {:ok, val} or {:error, reason} but instead, `#{inspect(other)}` was returned."
     end
   end
 
@@ -209,7 +213,7 @@ defmodule Confy do
         Confy.Options,
       sources:
         options[:sources] ||
-        Process.get(Confy, [])[:sources] ||
+        Process.get(:confy, [])[:sources] ||
         Application.get_env(Confy, :sources) ||
         [],
 

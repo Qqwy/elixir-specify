@@ -12,13 +12,31 @@ defmodule Confy.Options do
   can be configured in the same way.
 
   """
+
+  def list_of_sources(sources) do
+    res = Enum.reduce_while(sources, [], fn
+      (source = %_struct{}, acc) ->
+        {:cont, [source | acc]}
+      (source, acc) when is_atom(source) ->
+        case source.__info__(:functions)[:new] do
+          0 -> {:cont, [source.new() | acc]}
+          _ -> {:halt, {:error, "`#{inspect(source)}` does not seem to have an appropriate default `new/0` function. Pass a full-fledged `%#{inspect(source)}{}` instead."}}
+        end
+    end)
+    case res do
+      {:error, error} -> {:error, error}
+      sources_list -> {:ok, Enum.reverse(sources_list)}
+    end
+  end
+
+
   Confy.defconfig do
     @doc """
     A list of structures that implement the `Confy.Provider` protocol, which will be used to fetch configuration from.
     Later entries in the list take precedence over earlier entries.
     Defaults always have the lowest precedence, and `:overrides` always have the highest precedence.
     """
-    field :sources, :term, default: []
+    field :sources, &Confy.Options.list_of_sources/1, default: []
 
     @doc """
     A list or map (or other enumerable) representing explicit overrides

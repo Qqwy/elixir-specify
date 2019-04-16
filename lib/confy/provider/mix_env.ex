@@ -1,7 +1,7 @@
 defmodule Confy.Provider.MixEnv do
   defstruct [:application, :key]
 
-  def new(application, key \\ nil) do
+  def new(application \\ nil, key \\ nil) do
     %__MODULE__{application: application, key: key}
   end
 
