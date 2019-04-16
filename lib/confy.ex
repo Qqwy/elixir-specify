@@ -17,15 +17,20 @@ defmodule Confy do
 
     Can/should only be called inside a call to `Confy.defconfig`.
 
+    - `name` should be an atom representing the field. It will also become the field name for the struct that is created.
+    - `parser` should either be:
+      - an arity-one function reference like `&YourModule.some_type_parser/1`.
+      - An atom representing one of the common parser function names in `Confy.Parsers` like `:integer`, `:string`, `:boolean` or `:term`.
 
-    Supported options are:
+
+    Supported field options are:
 
     - `default:`, supplies a default value to this field. If not set, the configuration field is set to be _required_.
 
     You are highly encouraged to add a `@doc`umentation text above each and every field;
     these will be added to the configuration's module documentation.
     """
-    defmacro field(name, parser, opts \\ []) do
+    defmacro field(name, parser, options \\ []) do
       quote do
         field_documentation = Module.delete_attribute(__MODULE__, :doc)
         field_documentation =
@@ -35,7 +40,7 @@ defmodule Confy do
               IO.warn("Missing documentation for configuration field `#{unquote(name)}`. Please add it by adding `@doc \"field documentation here\"` above the line where you define it.")
               ""
           end
-        Confy.__field__(__MODULE__, unquote(name), unquote(parser), field_documentation, unquote(opts))
+        Confy.__field__(__MODULE__, unquote(name), unquote(parser), field_documentation, unquote(options))
       end
     end
   end
@@ -204,20 +209,20 @@ defmodule Confy do
         Confy.Options,
       sources:
         options[:sources] ||
-        Process.get(:confy, [])[:sources] ||
-        Application.get_env(:confy, :sources) ||
+        Process.get(Confy, [])[:sources] ||
+        Application.get_env(Confy, :sources) ||
         [],
 
       missing_fields_error:
         options[:missing_fields_error] ||
-        Process.get(:confy, [])[:missing_fields_error] ||
-        Application.get_env(:confy, :missing_fields_error) ||
+        Process.get(Confy, [])[:missing_fields_error] ||
+        Application.get_env(Confy, :missing_fields_error) ||
         Confy.MissingRequiredFieldsError,
 
       parsing_error:
         options[:parsing_error] ||
-        Process.get(:confy, [])[:parsing_error] ||
-        Application.get_env(:confy, :parsing_error) ||
+        Process.get(Confy, [])[:parsing_error] ||
+        Application.get_env(Confy, :parsing_error) ||
         Confy.ParsingError,
       explain:
         options[:explain] ||

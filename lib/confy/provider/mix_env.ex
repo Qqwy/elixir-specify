@@ -6,6 +6,9 @@ defmodule Confy.Provider.MixEnv do
   end
 
   defimpl Confy.Provider do
+    def load(%Confy.Provider.MixEnv{application: nil, key: nil}, module) do
+      {:ok, Enum.into(Application.get_all_env(module), %{})}
+    end
     def load(%Confy.Provider.MixEnv{application: application, key: nil}, module) do
       load(%Confy.Provider.MixEnv{application: application, key: module}, module)
     end
