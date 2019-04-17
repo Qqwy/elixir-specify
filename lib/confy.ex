@@ -414,8 +414,7 @@ defmodule Confy do
     case Confy.Parsers.__info__(:functions)[parser] do
       nil -> raise ArgumentError, "Parser shorthand `#{inspect(parser)}` was not recognized. Only atoms representing names of functions that live in `Confy.Parsers` are."
       1 ->
-        {binding, []} = Function.capture(Confy.Parsers, parser, 1)
-        binding
+        Function.capture(Confy.Parsers, parser, 1)
     end
   end
   defp normalize_parser(other), do: other

@@ -143,4 +143,4 @@ If extra information is required about the configuration specification to write 
 
 ## Attribution
 
-I want to thank Chris Keathley for his interesting library [Vapor](https://github.com/keathley/vapor) which served in part as inspiration for Confy.
+I want to thank Chris Keathley for his interesting library [Vapor](https://github.com/keathley/vapor) which helped inspire Confy.
