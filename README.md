@@ -139,3 +139,8 @@ If extra information is required about the configuration specification to write 
 - JSON and YML files provider.
 - Watching for updates and call a configurable handler function when configuration has changed.
 - Nested configs?
+
+
+## Attribution
+
+I want to thank Chris Keathley for his interesting library [Vapor](https://github.com/keathley/vapor) which served in part as inspiration for Confy.

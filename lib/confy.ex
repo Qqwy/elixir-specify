@@ -414,7 +414,7 @@ defmodule Confy do
     case Confy.Parsers.__info__(:functions)[parser] do
       nil -> raise ArgumentError, "Parser shorthand `#{inspect(parser)}` was not recognized. Only atoms representing names of functions that live in `Confy.Parsers` are."
       1 ->
-        {binding, []} = Code.eval_quoted(quote do &Confy.Parsers.unquote(parser)/1 end)
+        {binding, []} = Function.capture(Confy.Parsers, parser, 1)
         binding
     end
   end
