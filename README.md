@@ -5,13 +5,16 @@
 [![Inline docs](http://inch-ci.org/github/qqwy/elixir_confy.svg)](http://inch-ci.org/github/qqwy/elixir_confy)
 
 
-Comfortable, Explicit, Multi-Layered and Well-Documented configuration specifications in Elixir:
+Comfortable, Explicit, Multi-Layered and Well-Documented specifications for Dynamic Configuration in Elixir:
 
 - Configuration is converted to a struct, with fields being parsed to their appropriate types.
 - Specify a stack of sources to fetch the configuration from.
 - Always possible to override local configuration using plain arguments to a function call.
 - Fail-fast on missing or malformed values.
 - Auto-generated documentation based on your config specification.
+
+
+Configuration made with Confy is usually read _during runtime_ (like when starting a process) rather than during compile/boot-time. This is a contrast with how e.g. Mix configs or Distillery releases (on their own; they can be used in combination with Confy as well) work, since their configuration settings usually are fully set in stone already during compile-time.
 
 ## Installation
 

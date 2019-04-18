@@ -5,7 +5,7 @@ defmodule Confy.MixProject do
   def project do
     [
       app: :confy,
-      version: "0.2.0",
+      version: "0.2.1",
       elixir: "~> 1.7",
       start_permanent: Mix.env() == :prod,
       deps: deps(),
@@ -35,7 +35,7 @@ defmodule Confy.MixProject do
 
   defp description do
     """
-    Comfortable, Explicit, Multi-Layered and Well-Documented configuration specifications
+    Comfortable, Explicit, Multi-Layered and Well-Documented specifications for Dynamic Configuration
     """
   end
 
