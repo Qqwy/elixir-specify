@@ -20,8 +20,12 @@ defmodule Confy.ParsersTest do
     end
 
     property "fails on non-integer terms" do
-      check all thing <- term(), !is_integer(thing) do
-        assert {:error, _} = Parsers.integer(thing)
+      check all thing <- term() do
+        if is_integer(thing) do
+          assert {:ok, thing} = Parsers.integer(thing)
+        else
+          assert {:error, _} = Parsers.integer(thing)
+        end
       end
     end
   end
@@ -56,8 +60,12 @@ defmodule Confy.ParsersTest do
 
 
     property "fails on non-integer terms" do
-      check all thing <- term(), !is_float(thing), !is_integer(thing) do
-        assert {:error, _} = Parsers.float(thing)
+      check all thing <- term() do
+        if(is_float(thing) or is_integer(thing)) do
+          assert {:ok, 1.0 * thing} == Parsers.float(thing)
+        else
+          assert {:error, _} = Parsers.float(thing)
+        end
       end
     end
   end
@@ -76,21 +84,34 @@ defmodule Confy.ParsersTest do
       end
     end
 
-    def convertible_to_string?(thing) do
-      try do
-        to_string(thing)
-        true
-      rescue
-        Protocol.UndefinedError ->
-          false
-        ArgumentError ->
-          false
-      end
-    end
-
     property "works on terms that implement String.Chars" do
       check all thing <- one_of([integer(), string(:printable), binary(), float(), boolean(), atom(:alphanumeric)]) do
         assert {:ok, "#{thing}"} == Parsers.string(thing)
+      end
+    end
+  end
+
+  describe "boolean/1" do
+    property "works on booleans" do
+      check all bool <- boolean() do
+        assert {:ok, bool} == Parsers.boolean(bool)
+      end
+    end
+
+    property "works on strings representing booleans" do
+      check all bool <- boolean() do
+        str = to_string(bool)
+        assert {:ok, bool} == Parsers.boolean(str)
+      end
+    end
+
+    property "does not work on non-boolean terms" do
+      check all thing <- term() do
+        if is_boolean(thing) do
+          assert {:ok, thing} == Parsers.boolean(thing)
+        else
+          assert {:error, _} = Parsers.boolean(thing)
+        end
       end
     end
   end
