@@ -144,6 +144,12 @@ If extra information is required about the configuration specification to write 
 - Possibility to load without raising on parsing falure (instead returning a success/failure tuple?)
 - Watching for updates and call a configurable handler function when configuration has changed.
 
+## Changelog
+
+- 0.3.0 - Changed `overrides:` to `explicit_values:` and added `Confy.load_explicit/3` function. (Also added tests and fixed parser bugs).
+- 0.2.0 - Initially released version
+
+
 ## Attribution
 
 I want to thank Chris Keathley for his interesting library [Vapor](https://github.com/keathley/vapor) which helped inspire Confy.
