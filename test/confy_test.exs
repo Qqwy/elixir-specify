@@ -19,8 +19,16 @@ defmodule ConfyTest do
 
     test "Basic configuration works without glaring problems" do
       assert Confy.load(Foo, explicit_values: [age: 42]) == %Foo{name: "Jabberwocky", age: 42}
+      assert Foo.load( explicit_values: [age: 43]) == %Foo{name: "Jabberwocky", age: 43}
+
+      assert Confy.load_explicit(Foo, [age: 42]) == %Foo{name: "Jabberwocky", age: 42}
+      assert Foo.load_explicit([age: 44]) == %Foo{name: "Jabberwocky", age: 44}
+
       assert_raise(Confy.MissingRequiredFieldsError, fn ->
-        Foo.load()
+        Confy.load(Foo)
+      end)
+      assert_raise(Confy.MissingRequiredFieldsError, fn ->
+        Confy.load_explicit(Foo, [])
       end)
     end
 
