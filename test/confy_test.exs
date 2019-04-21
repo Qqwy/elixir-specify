@@ -18,7 +18,7 @@ defmodule ConfyTest do
     end
 
     test "Basic configuration works without glaring problems" do
-      assert Confy.load(Foo, overrides: [age: 42]) == %Foo{name: "Jabberwocky", age: 42}
+      assert Confy.load(Foo, explicit_values: [age: 42]) == %Foo{name: "Jabberwocky", age: 42}
       assert_raise(Confy.MissingRequiredFieldsError, fn ->
         Foo.load()
       end)

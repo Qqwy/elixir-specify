@@ -34,15 +34,15 @@ defmodule Confy.Options do
     @doc """
     A list of structures that implement the `Confy.Provider` protocol, which will be used to fetch configuration from.
     Later entries in the list take precedence over earlier entries.
-    Defaults always have the lowest precedence, and `:overrides` always have the highest precedence.
+    Defaults always have the lowest precedence, and `:explicit_values` always have the highest precedence.
     """
     field :sources, &Confy.Options.list_of_sources/1, default: []
 
     @doc """
-    A list or map (or other enumerable) representing explicit overrides
+    A list or map (or other enumerable) representing explicit values
     that are to be used instead of what can be found in the implicit sources stack.
     """
-    field :overrides, :term, default: []
+    field :explicit_values, :term, default: []
 
     @doc """
     The error to be raised if a missing field which is required has been encountered.

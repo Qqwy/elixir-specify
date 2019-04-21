@@ -131,6 +131,16 @@ defmodule Confy do
         """
         def load(options \\ []), do: Confy.load(__MODULE__, options ++ unquote(options))
 
+        @doc """
+        Loads, parses and normalizes the configuration of `#{inspect(__MODULE__)}`, using the provided `explicit_values` (and falling back to values configured elsewhere)
+
+        For more information about the options this function supports, see
+        `Confy.load_explicit/3` and `Confy.Options`
+        """
+        def load_explicit(explicit_values, options \\ []), do: Confy.load_explicit(__MODULE__, explicit_values, options ++ unquote(options))
+
+
+
         :ok
       end
     end
@@ -145,16 +155,16 @@ defmodule Confy do
   and how it can be configured further.
   """
   def load(config_module, options \\ []) do
-    overrides =
-      (options[:overrides] || [])
+    explicit_values =
+      (options[:explicit_values] || [])
       |> Enum.to_list
 
-    prevent_improper_overrides!(config_module, overrides)
+    prevent_improper_explicit_values!(config_module, explicit_values)
 
     options = parse_options(config_module, options)
 
     # Values explicitly passed in are always the last, highest priority source.
-    sources = options.sources ++ [overrides]
+    sources = options.sources ++ [explicit_values]
     sources_configs = load_sources_configs(config_module, sources)
 
     if options.explain do
@@ -170,16 +180,30 @@ defmodule Confy do
     end
   end
 
-  # Raises if `overrides` contains keys that are not part of the configuration structure of `config_module`.
-  defp prevent_improper_overrides!(config_module, overrides) do
-    improper_overrides =
-      overrides
+  @doc """
+  Loads, parses and normalizes the configuration of `config_module`, using the provided `explicit_values` (and falling back to values configured elsewhere)
+
+  This call is conceptually the same as `Confy.load(config_module, [explicit_values: [] | options])`, but makes it more explicit that values
+  are meant to be passed in as arguments.
+
+  Prefer this function if you do not intend to use Confy's 'cascading configuration' functionality, such as when e.g. just parsing options passed to a function,
+  `use`-statement or other macro.
+  """
+  def load_explicit(config_module, explicit_values, options \\ []) do
+    full_options = put_in(options, [:explicit_values], explicit_values)
+    load(config_module, full_options)
+  end
+
+  # Raises if `explicit_values` contains keys that are not part of the configuration structure of `config_module`.
+  defp prevent_improper_explicit_values!(config_module, explicit_values) do
+    improper_explicit_values =
+      explicit_values
       |> Keyword.keys
       |> MapSet.new
       |> MapSet.difference(config_module.__confy__(:field_names))
 
-    if(Enum.any?(improper_overrides)) do
-      raise ArgumentError, "The following fields passed as `:overrides` are not part of `#{inspect(config_module)}`'s fields: `#{improper_overrides |> Enum.map(&inspect/1) |> Enum.join(", ")}`."
+    if(Enum.any?(improper_explicit_values)) do
+      raise ArgumentError, "The following fields passed as `:explicit_values` are not part of `#{inspect(config_module)}`'s fields: `#{improper_explicit_values |> Enum.map(&inspect/1) |> Enum.join(", ")}`."
     end
   end
 
@@ -245,7 +269,7 @@ defmodule Confy do
         false
     }
   end
-  defp parse_options(_config_module, options), do: Confy.Options.load(overrides: options)
+  defp parse_options(_config_module, options), do: Confy.Options.load(explicit_values: options)
 
   # Turns a list of Access-implementations into a map of lists.
   # In the end, empty values will look like `key: []`.
