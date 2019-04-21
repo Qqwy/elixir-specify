@@ -73,7 +73,7 @@ defmodule Confy.Parsers do
 
   def atom(binary) when is_binary(binary) do
     try do
-      String.to_existing_atom(binary)
+      {:ok, String.to_existing_atom(binary)}
     rescue
       ArgumentError ->
         {:error, "`#{binary}` is not an existing atom."}

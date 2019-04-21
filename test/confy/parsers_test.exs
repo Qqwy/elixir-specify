@@ -115,4 +115,31 @@ defmodule Confy.ParsersTest do
       end
     end
   end
+
+  describe "atom/1 and unsafe_atom/1" do
+    property "works on atoms" do
+      check all atom <- one_of([atom(:alphanumeric), atom(:alias)]) do
+        assert {:ok, atom} == Parsers.atom(atom)
+        assert {:ok, atom} == Parsers.unsafe_atom(atom)
+      end
+    end
+
+    property "Works on strings" do
+      check all atom <- one_of([atom(:alphanumeric), atom(:alias)]) do
+        str = to_string(atom)
+        assert {:ok, atom} == Parsers.atom(str)
+        assert {:ok, atom} == Parsers.unsafe_atom(str)
+      end
+    end
+
+    test "atom/1 raises on non-existent atom" do
+      assert {:error, _} = Parsers.atom("this_does_not_exist_as_atom")
+      assert {:error, _} = Parsers.atom("This.Module.Does.Not.Exist.Either")
+    end
+
+    test "unsafe_atom/1 does noton non-existent atom" do
+      assert {:ok, :this_does_not_exist_as_atom2} = Parsers.unsafe_atom("this_does_not_exist_as_atom2")
+      assert {:ok, This.Module.Does.Not.Exist.Either2} = Parsers.unsafe_atom("Elixir.This.Module.Does.Not.Exist.Either2")
+    end
+  end
 end
