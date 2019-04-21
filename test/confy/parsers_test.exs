@@ -19,6 +19,8 @@ defmodule Confy.ParsersTest do
       end
     end
 
+    # Yes, this property test does not work on inputs like "9".
+    # I am not sure what to do about that.
     property "fails on non-integer terms" do
       check all thing <- term() do
         if is_integer(thing) do
@@ -59,6 +61,8 @@ defmodule Confy.ParsersTest do
     end
 
 
+    # Yes, this property test does not work on inputs like "9".
+    # I am not sure what to do about that.
     property "fails on non-integer terms" do
       check all thing <- term() do
         if(is_float(thing) or is_integer(thing)) do
