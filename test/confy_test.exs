@@ -46,6 +46,13 @@ defmodule ConfyTest do
                "Missing documentation for configuration field `name`. Please add it by adding `@doc \"field documentation here\"` above the line where you define it."
     end
 
+    test "Reflection is in place" do
+      assert MapSet.new([:name, :age]) == BasicConfyExample.__confy__(:field_names)
+      assert %{name: "Jabberwocky"} == BasicConfyExample.__confy__(:defaults)
+      assert MapSet.new([:age]) == BasicConfyExample.__confy__(:required_fields)
+      assert %{name: &Confy.Parsers.string/1, age: &Confy.Parsers.integer/1} == BasicConfyExample.__confy__(:parsers)
+    end
+
   end
 
   describe "parsers are properly called" do
