@@ -72,5 +72,16 @@ defmodule ConfyTest do
         end
       end
     end
+
+    property "parser failure results in (custom) error" do
+      defmodule MyCustomError do
+        defexception [:message]
+      end
+      check all  thing <- term(), !is_integer(thing) do
+        assert_raise(MyCustomError, fn () ->
+          ParsingExample.load_explicit([size: thing], [parsing_error: MyCustomError])
+        end)
+      end
+    end
   end
 end
