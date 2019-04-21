@@ -57,7 +57,7 @@ end
 ```
 
 ```
-iex> Cosette.CastleOnACloud.load(overrides: [lullaby: "I love you very much", crying_allowed: true])
+iex> Cosette.CastleOnACloud.load(explicit_values: [lullaby: "I love you very much", crying_allowed: true])
 %Cosette.CastleOnACloud{
   crying_allowed: true,
   floors_to_sweep: 0,
@@ -140,9 +140,9 @@ If extra information is required about the configuration specification to write 
 - CLI arguments provider, which could be helpful for defining e.g. Mix tasks.
 - .env files provider.
 - JSON and YML files provider.
-- Watching for updates and call a configurable handler function when configuration has changed.
 - Nested configs?
-
+- Possibility to load without raising on parsing falure (instead returning a success/failure tuple?)
+- Watching for updates and call a configurable handler function when configuration has changed.
 
 ## Attribution
 

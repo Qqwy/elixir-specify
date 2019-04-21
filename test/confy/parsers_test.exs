@@ -45,7 +45,6 @@ defmodule Confy.ParsersTest do
       end
     end
 
-
     property "works on binaries representing floats" do
       check all float <- float() do
         str = to_string(float)
@@ -59,7 +58,6 @@ defmodule Confy.ParsersTest do
         assert Parsers.float(str) === {:ok, 1.0 * int}
       end
     end
-
 
     # Yes, this property test does not work on inputs like "9".
     # I am not sure what to do about that.
@@ -89,7 +87,15 @@ defmodule Confy.ParsersTest do
     end
 
     property "works on terms that implement String.Chars" do
-      check all thing <- one_of([integer(), string(:printable), binary(), float(), boolean(), atom(:alphanumeric)]) do
+      check all thing <-
+                  one_of([
+                    integer(),
+                    string(:printable),
+                    binary(),
+                    float(),
+                    boolean(),
+                    atom(:alphanumeric)
+                  ]) do
         assert {:ok, "#{thing}"} == Parsers.string(thing)
       end
     end
@@ -142,8 +148,11 @@ defmodule Confy.ParsersTest do
     end
 
     test "unsafe_atom/1 does noton non-existent atom" do
-      assert {:ok, :this_does_not_exist_as_atom2} = Parsers.unsafe_atom("this_does_not_exist_as_atom2")
-      assert {:ok, This.Module.Does.Not.Exist.Either2} = Parsers.unsafe_atom("Elixir.This.Module.Does.Not.Exist.Either2")
+      assert {:ok, :this_does_not_exist_as_atom2} =
+               Parsers.unsafe_atom("this_does_not_exist_as_atom2")
+
+      assert {:ok, This.Module.Does.Not.Exist.Either2} =
+               Parsers.unsafe_atom("Elixir.This.Module.Does.Not.Exist.Either2")
     end
   end
 end
