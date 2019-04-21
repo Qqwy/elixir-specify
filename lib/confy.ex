@@ -49,18 +49,30 @@ defmodule Confy do
     defmacro field(name, parser, options \\ []) do
       quote do
         field_documentation = Module.delete_attribute(__MODULE__, :doc)
+
         field_documentation =
           case field_documentation do
-            {_line, val} -> val
+            {_line, val} ->
+              val
+
             nil ->
-              IO.warn("Missing documentation for configuration field `#{unquote(name)}`. Please add it by adding `@doc \"field documentation here\"` above the line where you define it.")
+              IO.warn(
+                "Missing documentation for configuration field `#{unquote(name)}`. Please add it by adding `@doc \"field documentation here\"` above the line where you define it."
+              )
+
               ""
           end
-        Confy.__field__(__MODULE__, unquote(name), unquote(parser), field_documentation, unquote(options))
+
+        Confy.__field__(
+          __MODULE__,
+          unquote(name),
+          unquote(parser),
+          field_documentation,
+          unquote(options)
+        )
       end
     end
   end
-
 
   @doc """
   Defines a configuration structure in the current module.
@@ -92,15 +104,22 @@ defmodule Confy do
     quote do
       import Confy.Schema
       Module.register_attribute(__MODULE__, :config_fields, accumulate: true)
+
       try do
         unquote(block)
       after
         config_fields =
           Module.get_attribute(__MODULE__, :config_fields)
-          |> Enum.reverse
+          |> Enum.reverse()
 
-        {line_number, existing_moduledoc} = Module.delete_attribute(__MODULE__, :moduledoc) || {0, ""}
-        Module.put_attribute(__MODULE__, :moduledoc, {line_number, existing_moduledoc <> Confy.__config_doc__(config_fields)})
+        {line_number, existing_moduledoc} =
+          Module.delete_attribute(__MODULE__, :moduledoc) || {0, ""}
+
+        Module.put_attribute(
+          __MODULE__,
+          :moduledoc,
+          {line_number, existing_moduledoc <> Confy.__config_doc__(config_fields)}
+        )
 
         defstruct(Confy.__struct_fields__(config_fields))
 
@@ -137,9 +156,8 @@ defmodule Confy do
         For more information about the options this function supports, see
         `Confy.load_explicit/3` and `Confy.Options`
         """
-        def load_explicit(explicit_values, options \\ []), do: Confy.load_explicit(__MODULE__, explicit_values, options ++ unquote(options))
-
-
+        def load_explicit(explicit_values, options \\ []),
+          do: Confy.load_explicit(__MODULE__, explicit_values, options ++ unquote(options))
 
         :ok
       end
@@ -157,7 +175,7 @@ defmodule Confy do
   def load(config_module, options \\ []) do
     explicit_values =
       (options[:explicit_values] || [])
-      |> Enum.to_list
+      |> Enum.to_list()
 
     prevent_improper_explicit_values!(config_module, explicit_values)
 
@@ -176,7 +194,7 @@ defmodule Confy do
 
       sources_configs
       |> Enum.map(&try_load_and_parse!(&1, parsers, config_module, options))
-      |> fn config -> struct(config_module, config) end.()
+      |> (fn config -> struct(config_module, config) end).()
     end
   end
 
@@ -198,12 +216,15 @@ defmodule Confy do
   defp prevent_improper_explicit_values!(config_module, explicit_values) do
     improper_explicit_values =
       explicit_values
-      |> Keyword.keys
-      |> MapSet.new
+      |> Keyword.keys()
+      |> MapSet.new()
       |> MapSet.difference(config_module.__confy__(:field_names))
 
     if(Enum.any?(improper_explicit_values)) do
-      raise ArgumentError, "The following fields passed as `:explicit_values` are not part of `#{inspect(config_module)}`'s fields: `#{improper_explicit_values |> Enum.map(&inspect/1) |> Enum.join(", ")}`."
+      raise ArgumentError,
+            "The following fields passed as `:explicit_values` are not part of `#{
+              inspect(config_module)
+            }`'s fields: `#{improper_explicit_values |> Enum.map(&inspect/1) |> Enum.join(", ")}`."
     end
   end
 
@@ -216,7 +237,11 @@ defmodule Confy do
 
     if Enum.any?(missing_required_fields) do
       field_names = Map.keys(missing_required_fields)
-      raise options.missing_fields_error, "Missing required fields for `#{config_module}`: `#{field_names |> Enum.map(&inspect/1) |> Enum.join(", ")}`."
+
+      raise options.missing_fields_error,
+            "Missing required fields for `#{config_module}`: `#{
+              field_names |> Enum.map(&inspect/1) |> Enum.join(", ")
+            }`."
     end
   end
 
@@ -232,43 +257,49 @@ defmodule Confy do
   # Upon failure, raises an appropriate error.
   defp try_load_and_parse!({name, values}, parsers, config_module, options) do
     case parsers[name].(hd(values)) do
-      {:ok, value} -> {name, value}
-      {:error, reason} -> raise options.parsing_error, reason <> " (required for loading the field `#{inspect(name)}` of `#{inspect(config_module)}`)"
+      {:ok, value} ->
+        {name, value}
+
+      {:error, reason} ->
+        raise options.parsing_error,
+              reason <>
+                " (required for loading the field `#{inspect(name)}` of `#{inspect(config_module)}`)"
+
       other ->
-        raise ArgumentError, "Improper Confy configuration parser result. Parser `#{inspect(parsers[name])}` is supposed to return either {:ok, val} or {:error, reason} but instead, `#{inspect(other)}` was returned."
+        raise ArgumentError,
+              "Improper Confy configuration parser result. Parser `#{inspect(parsers[name])}` is supposed to return either {:ok, val} or {:error, reason} but instead, `#{
+                inspect(other)
+              }` was returned."
     end
   end
-
 
   # Parses `options` into a normalized `Confy.Options` struct.
   defp parse_options(config_module, options)
   # Catch bootstrapping-case
   defp parse_options(Confy.Options, options) do
     %{
-      __struct__:
-        Confy.Options,
+      __struct__: Confy.Options,
       sources:
         options[:sources] ||
-        Process.get(:confy, [])[:sources] ||
-        Application.get_env(Confy, :sources) ||
-        [],
-
+          Process.get(:confy, [])[:sources] ||
+          Application.get_env(Confy, :sources) ||
+          [],
       missing_fields_error:
         options[:missing_fields_error] ||
-        Process.get(Confy, [])[:missing_fields_error] ||
-        Application.get_env(Confy, :missing_fields_error) ||
-        Confy.MissingRequiredFieldsError,
-
+          Process.get(Confy, [])[:missing_fields_error] ||
+          Application.get_env(Confy, :missing_fields_error) ||
+          Confy.MissingRequiredFieldsError,
       parsing_error:
         options[:parsing_error] ||
-        Process.get(Confy, [])[:parsing_error] ||
-        Application.get_env(Confy, :parsing_error) ||
-        Confy.ParsingError,
+          Process.get(Confy, [])[:parsing_error] ||
+          Application.get_env(Confy, :parsing_error) ||
+          Confy.ParsingError,
       explain:
         options[:explain] ||
-        false
+          false
     }
   end
+
   defp parse_options(_config_module, options), do: Confy.Options.load(explicit_values: options)
 
   # Turns a list of Access-implementations into a map of lists.
@@ -279,12 +310,15 @@ defmodule Confy do
 
     list_of_configs
     |> Enum.reduce(begin_accumulator, fn config, acc ->
-      :maps.map(fn key, values_list ->
-        case Access.fetch(config, key) do
-          {:ok, val} -> [val | values_list]
-          :error -> values_list
-        end
-      end, acc)
+      :maps.map(
+        fn key, values_list ->
+          case Access.fetch(config, key) do
+            {:ok, val} -> [val | values_list]
+            :error -> values_list
+          end
+        end,
+        acc
+      )
     end)
   end
 
@@ -296,17 +330,23 @@ defmodule Confy do
   # and transforms `{source, {:ok, config}} -> config` for all successful configurations.
   defp reject_and_warn_unloadable_sources(sources_configs, config_module) do
     require Logger
+
     sources_configs
     |> Enum.flat_map(fn
-      {_source, {:ok, config}} -> [config]
+      {_source, {:ok, config}} ->
+        [config]
+
       {source, {:error, error}} ->
         case error do
           :not_found ->
             Logger.error("""
-            While loading the configuration `#{inspect(config_module)}`, the source `#{inspect(source)}` could not be found.
+            While loading the configuration `#{inspect(config_module)}`, the source `#{
+              inspect(source)
+            }` could not be found.
             Please make sure it exists.
             In the case you do not need this source, consider removing this source from the `sources:` list.
             """)
+
           :malformed ->
             Logger.error("""
             While loading the configuration `#{inspect(config_module)}`, found out that
@@ -314,10 +354,10 @@ defmodule Confy do
             This usually indicates a grave problem!
             """)
         end
+
         []
     end)
   end
-
 
   @doc false
   # Handles the actual work of the `field` macro.
@@ -346,29 +386,32 @@ defmodule Confy do
     acc =
       config_fields
       |> Enum.reduce("", fn {name, parser, documentation, options}, acc ->
-          doc = """
+        doc = """
 
-          ### #{name}
+        ### #{name}
 
-          #{documentation || "ASDF"}
+        #{documentation || "ASDF"}
 
-          Validated/parsed by calling `#{Macro.to_string(parser)}`.
-          """
+        Validated/parsed by calling `#{Macro.to_string(parser)}`.
+        """
 
-          doc =
-            case Access.fetch(options, :default) do
-              {:ok, val} -> """
-                #{doc}
-                Defaults to `#{inspect(val)}`.
-                """
-              :error -> """
-                #{doc}
-                Required field.
-                """
+        doc =
+          case Access.fetch(options, :default) do
+            {:ok, val} ->
+              """
+              #{doc}
+              Defaults to `#{inspect(val)}`.
+              """
+
+            :error ->
+              """
+              #{doc}
+              Required field.
+              """
           end
 
-          acc <> doc
-        end)
+        acc <> doc
+      end)
 
     """
     ## Configuration structure documentation:
@@ -430,16 +473,19 @@ defmodule Confy do
     |> Enum.into(%{})
   end
 
-
   # Replaces simplified atom parsers with
   # an actual reference to the parser function in `Confy.Parsers`.
   # NOTE: I dislke the necessity of `Code.eval_quoted` here, but do not currently know of another way.
   defp normalize_parser(parser) when is_atom(parser) do
     case Confy.Parsers.__info__(:functions)[parser] do
-      nil -> raise ArgumentError, "Parser shorthand `#{inspect(parser)}` was not recognized. Only atoms representing names of functions that live in `Confy.Parsers` are."
+      nil ->
+        raise ArgumentError,
+              "Parser shorthand `#{inspect(parser)}` was not recognized. Only atoms representing names of functions that live in `Confy.Parsers` are."
+
       1 ->
         Function.capture(Confy.Parsers, parser, 1)
     end
   end
+
   defp normalize_parser(other), do: other
 end

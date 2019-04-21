@@ -9,10 +9,10 @@ defmodule Confy.MixProject do
       elixir: "~> 1.7",
       start_permanent: Mix.env() == :prod,
       deps: deps(),
-      elixirc_paths: elixirc_paths(Mix.env),
+      elixirc_paths: elixirc_paths(Mix.env()),
       description: description(),
       package: package(),
-      source_url: @source_url,
+      source_url: @source_url
     ]
   end
 
@@ -27,8 +27,9 @@ defmodule Confy.MixProject do
   defp deps do
     [
       {:ex_doc, "~> 0.19", only: [:docs], runtime: false},
-      {:inch_ex, ">= 0.0.0", only: [:docs]},     # Inch CI documentation quality test.
-      {:stream_data, "~> 0.1", only: :test},
+      # Inch CI documentation quality test.
+      {:inch_ex, ">= 0.0.0", only: [:docs]},
+      {:stream_data, "~> 0.1", only: :test}
     ]
   end
 
@@ -41,7 +42,8 @@ defmodule Confy.MixProject do
   end
 
   defp package do
-    [# These are the default files included in the package
+    # These are the default files included in the package
+    [
       name: :confy,
       files: ["lib", "mix.exs", "README*", "LICENSE"],
       maintainers: ["Wiebe-Marten Wijnja/Qqwy"],
