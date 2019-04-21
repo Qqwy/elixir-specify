@@ -76,9 +76,21 @@ defmodule Confy.ParsersTest do
       end
     end
 
-    property "works on ints" do
-      check all int <- integer() do
-        assert {:ok, "#{int}"} == Parsers.string(int)
+    def convertible_to_string?(thing) do
+      try do
+        to_string(thing)
+        true
+      rescue
+        Protocol.UndefinedError ->
+          false
+        ArgumentError ->
+          false
+      end
+    end
+
+    property "works on terms that implement String.Chars" do
+      check all thing <- one_of([integer(), string(:printable), binary(), float(), boolean(), atom(:alphanumeric)]) do
+        assert {:ok, "#{thing}"} == Parsers.string(thing)
       end
     end
   end
