@@ -24,7 +24,7 @@ defmodule Confy.Parsers do
 
   def integer(binary) when is_binary(binary) do
     case Integer.parse(binary) do
-      {:ok, int} -> int
+      {int, ""} -> {:ok, int}
       :error -> {:error, "the binary `#{binary}` cannot be parsed to an integer."}
     end
   end
