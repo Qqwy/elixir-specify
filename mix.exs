@@ -28,6 +28,7 @@ defmodule Confy.MixProject do
     [
       {:ex_doc, "~> 0.19", only: [:docs], runtime: false},
       {:inch_ex, ">= 0.0.0", only: [:docs]},     # Inch CI documentation quality test.
+      {:stream_data, "~> 0.1", only: :test},
     ]
   end
 

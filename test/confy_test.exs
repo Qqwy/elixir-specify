@@ -32,7 +32,7 @@ defmodule ConfyTest do
       end)
     end
 
-    test "Warnings are thrown when defining a configuration with missing doc strings" do
+    test "Warnings are shown when defining a configuration with missing doc strings" do
       assert capture_io(:stderr, fn ->
         defmodule MissingDocs do
           require Confy
