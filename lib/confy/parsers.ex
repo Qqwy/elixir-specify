@@ -31,12 +31,12 @@ defmodule Confy.Parsers do
 
   def integer(other), do: {:error, "#{inspect(other)} is not an integer."}
 
-  def float(float) when is_float(float), do: float
-  def float(int) when is_integer(int), do: 1.0 * int
+  def float(float) when is_float(float), do: {:ok, float}
+  def float(int) when is_integer(int), do: {:ok, 1.0 * int}
 
   def float(binary) when is_binary(binary) do
     case Float.parse(binary) do
-      {:ok, float} -> float
+      {float, ""} -> {:ok, float}
       :error -> {:error, "the binary `#{binary}` is not a float."}
     end
   end
