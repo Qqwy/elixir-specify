@@ -443,7 +443,7 @@ defmodule Confy do
 
       {collection_parser, parser} ->
         """
-        Validated/parsed by calling `fn thing -> (#{Macro.to_string(normalize_parser(collection_parser, 2)))}).(thing, #{Macro.to_string(normalize_parser(parser))}) end`.
+        Validated/parsed by calling `fn thing -> (#{Macro.to_string(normalize_parser(collection_parser, 2)))}).(thing, #{Macro.to_string(normalize_parser(parser)}) end`.
 
         (Specified as `{#{Macro.to_string(collection_parser)}, #{Macro.to_string(parser)}}`)
         """
