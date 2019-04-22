@@ -35,9 +35,9 @@ defmodule Confy do
 
     - `name` should be an atom representing the field. It will also become the field name for the struct that is created.
     - `parser` should either be:
-      - an arity-one function reference like `&YourModule.some_type_parser/1`.
+      - an arity-one function capture like `&YourModule.some_type_parser/1`.
       - An atom representing one of the common parser function names in `Confy.Parsers` like `:integer`, `:string`, `:boolean` or `:term`.
-
+      - A two-element tuple like `{:list, :atom}`. The first element represents the 'collection parser' which is an arity-2 function that takes the 'element parser' as second argument. The second element is the 'element parser'. Both of the elements listed in the tuple can also be either an atom, or a function capture with the correct arity. (like `{&YourAwesomeModule.fancy_collection/2, :integer}`).
 
     Supported field options are:
 

@@ -129,6 +129,8 @@ If extra information is required about the configuration specification to write 
 ## Roadmap
 
 - [x] Compound parsers for collections using `{collection_parser, element_parser}`-syntax, with provided `:list` parser.
+- [x] Main functionality documentation.
+- [x] Parsers documentation.
 - [x] Writing basic Tests
   - [x] Confy.Parsers
   - [x] Main Confy module and functionality.
