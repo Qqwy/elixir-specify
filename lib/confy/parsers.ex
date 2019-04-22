@@ -35,9 +35,9 @@ defmodule Confy.Parsers do
   def integer(other), do: {:error, "#{inspect(other)} is not an integer."}
 
   @doc """
-  Parses a float and turns binary string representing a float into an float.
+  Parses a float and turns a binary string representing a float into an float.
 
-  Will also accept integers, which are turned into floats.
+  Will also accept integers, which are turned into their float equivalent.
   """
   def float(float) when is_float(float), do: {:ok, float}
   def float(int) when is_integer(int), do: {:ok, 1.0 * int}
