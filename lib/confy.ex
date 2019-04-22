@@ -437,13 +437,15 @@ defmodule Confy do
       atom when is_atom(atom) ->
         """
         Validated/parsed by calling #{Macro.to_string(parser)}.
+
         (Specified as `#{inspect(atom)}`)
         """
 
-      {:list, parser} ->
+      {collection_parser, parser} ->
         """
-        Validated/parsed by calling `fn thing -> &Confy.Parsers.list(thing, #{Macro.to_string(normalize_parser(parser))}) end`.
-        (Specified as `{:list, #{Macro.to_string(parser)}}`)
+        Validated/parsed by calling `fn thing -> (#{Macro.to_string(normalize_parser(collection_parser, 2)))}).(thing, #{Macro.to_string(normalize_parser(parser))}) end`.
+
+        (Specified as `{#{Macro.to_string(collection_parser)}, #{Macro.to_string(parser)}}`)
         """
       _other ->
         """
