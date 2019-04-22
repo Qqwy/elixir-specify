@@ -256,7 +256,8 @@ defmodule Confy do
   # Attempts to parse the highest-priority value of a given `name`.
   # Upon failure, raises an appropriate error.
   defp try_load_and_parse!({name, values}, parsers, config_module, options) do
-    case parsers[name].(hd(values)) do
+    parser = construct_parser(parsers[name])
+    case parser.(hd(values)) do
       {:ok, value} ->
         {name, value}
 
@@ -271,6 +272,14 @@ defmodule Confy do
                 inspect(other)
               }` was returned."
     end
+  end
+
+  defp construct_parser({collection_parser, elem_parser}) do
+    fn thing -> collection_parser.(thing, elem_parser) end
+  end
+
+  defp construct_parser(elem_parser) do
+    elem_parser
   end
 
   # Parses `options` into a normalized `Confy.Options` struct.
@@ -362,8 +371,8 @@ defmodule Confy do
   @doc false
   # Handles the actual work of the `field` macro.
   def __field__(module, name, parser, field_documentation, options) do
-    parser = normalize_parser(parser)
-    Module.put_attribute(module, :config_fields, {name, parser, field_documentation, options})
+    normalized_parser = normalize_parser(parser)
+    Module.put_attribute(module, :config_fields, %{name: name, parser: normalized_parser, original_parser: parser, documentation: field_documentation, options: options})
   end
 
   # Extracts the struct definition keyword list
@@ -371,7 +380,7 @@ defmodule Confy do
   @doc false
   def __struct_fields__(config_fields) do
     config_fields
-    |> Enum.map(fn {name, _parser, _documentation, options} ->
+    |> Enum.map(fn %{name: name, options: options} ->
       {name, options[:default]}
     end)
   end
@@ -385,14 +394,14 @@ defmodule Confy do
   def __config_doc__(config_fields) do
     acc =
       config_fields
-      |> Enum.reduce("", fn {name, parser, documentation, options}, acc ->
+      |> Enum.reduce("", fn %{name: name, parser: parser, original_parser: original_parser, documentation: documentation, options: options}, acc ->
         doc = """
 
         ### #{name}
 
         #{documentation || "ASDF"}
 
-        Validated/parsed by calling `#{Macro.to_string(parser)}`.
+        #{parser_doc(parser, original_parser)}
         """
 
         doc =
@@ -423,17 +432,37 @@ defmodule Confy do
     """
   end
 
+  defp parser_doc(parser, original_parser) do
+    case original_parser do
+      atom when is_atom(atom) ->
+        """
+        Validated/parsed by calling #{Macro.to_string(parser)}.
+        (Specified as `#{inspect(atom)}`)
+        """
+
+      {:list, parser} ->
+        """
+        Validated/parsed by calling `fn thing -> &Confy.Parsers.list(thing, #{Macro.to_string(normalize_parser(parser))}) end`.
+        (Specified as `{:list, #{Macro.to_string(parser)}}`)
+        """
+      _other ->
+        """
+        Validated/parsed by calling #{Macro.to_string(parser)}.
+        """
+    end
+  end
+
   @doc false
   # Builds a map of fields with default values.
   def __defaults__(config_fields) do
     config_fields
-    |> Enum.filter(fn {_name, _parser, _documentation, options} ->
+    |> Enum.filter(fn %{options: options} ->
       case Access.fetch(options, :default) do
         {:ok, _} -> true
         :error -> false
       end
     end)
-    |> Enum.map(fn {name, _parser, _documentation, options} ->
+    |> Enum.map(fn %{name: name, options: options} ->
       {name, options[:default]}
     end)
     |> Enum.into(%{})
@@ -443,13 +472,13 @@ defmodule Confy do
   # Builds a MapSet of all the required fields
   def __required_fields__(config_fields) do
     config_fields
-    |> Enum.filter(fn {_name, _parser, _documentation, options} ->
+    |> Enum.filter(fn %{options: options} ->
       case Access.fetch(options, :default) do
         :error -> true
         _ -> false
       end
     end)
-    |> Enum.map(fn {name, _, _, _} ->
+    |> Enum.map(fn %{name: name} ->
       name
     end)
     |> MapSet.new()
@@ -459,7 +488,7 @@ defmodule Confy do
   # Builds a MapSet of all the fields
   def __field_names__(config_fields) do
     config_fields
-    |> Enum.map(fn {name, _, _, _} -> name end)
+    |> Enum.map(fn %{name: name} -> name end)
     |> MapSet.new()
   end
 
@@ -467,7 +496,7 @@ defmodule Confy do
   # Builds a map of parsers for the fields.
   def __parsers__(config_fields) do
     config_fields
-    |> Enum.map(fn {name, parser, _, _} ->
+    |> Enum.map(fn %{name: name, parser: parser} ->
       {name, parser}
     end)
     |> Enum.into(%{})
@@ -475,17 +504,21 @@ defmodule Confy do
 
   # Replaces simplified atom parsers with
   # an actual reference to the parser function in `Confy.Parsers`.
-  # NOTE: I dislke the necessity of `Code.eval_quoted` here, but do not currently know of another way.
-  defp normalize_parser(parser) when is_atom(parser) do
+  defp normalize_parser(parser, arity \\ 1)
+  defp normalize_parser(parser, arity) when is_atom(parser) do
     case Confy.Parsers.__info__(:functions)[parser] do
       nil ->
         raise ArgumentError,
               "Parser shorthand `#{inspect(parser)}` was not recognized. Only atoms representing names of functions that live in `Confy.Parsers` are."
 
-      1 ->
-        Function.capture(Confy.Parsers, parser, 1)
+      ^arity ->
+        Function.capture(Confy.Parsers, parser, arity)
     end
   end
 
-  defp normalize_parser(other), do: other
+  defp normalize_parser({collection_parser, elem_parser}, _arity) do
+    {normalize_parser(collection_parser, 2), normalize_parser(elem_parser, 1)}
+  end
+
+  defp normalize_parser(other, _arity), do: other
 end

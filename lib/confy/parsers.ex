@@ -89,4 +89,37 @@ defmodule Confy.Parsers do
   end
 
   def unsafe_atom(other), do: {:error, "`#{inspect(other)}` is not convertible to an atom."}
+
+  @doc """
+  Parses a list of elements
+  """
+  def list(list, elem_fun) when is_list(list) do
+    res_list = Enum.reduce_while(list, [], fn
+      elem, acc ->
+        case elem_fun.(elem) do
+          {:ok, res} -> {:cont, [res | acc]}
+          {:error, reason} ->
+            {:halt, {:error, "One of the elements of input list `#{inspect(list)}` failed to parse: \n#{reason}."}}
+        end
+    end)
+    case res_list do
+      {:error, reason} ->
+        {:error, reason}
+      parsed_list when is_list(parsed_list) ->
+        {:ok, Enum.reverse(parsed_list)}
+    end
+  end
+
+  def list(binary, elem_fun) when is_binary(binary) do
+    case Code.string_to_quoted(binary, existing_atoms_only: true) do
+      {:ok, list_ast} when is_list(list_ast) ->
+        list_ast
+        |> Enum.map(&Macro.expand(&1, __ENV__))
+        |> list(elem_fun)
+      {:ok, _not_a_list} ->
+        {:error, "`#{inspect(binary)}`, while parseable as Elixir code, does not represent an Elixir list."}
+      {:error, reason} ->
+        {:error, reason}
+    end
+  end
 end
