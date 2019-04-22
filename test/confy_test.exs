@@ -10,19 +10,21 @@ defmodule ConfyTest do
       require Confy
 
       Confy.defconfig do
-        @doc "a name"
+        @doc "a field with a default"
         field(:name, :string, default: "Jabberwocky")
-        @doc "how old this BasicConfyExample is"
+        @doc "A required field"
         field(:age, :integer)
+        @doc "A compound parsers test."
+        field :colors, {:list, :atom}, default: []
       end
     end
 
     test "Basic configuration works without glaring problems" do
-      assert Confy.load(BasicConfyExample, explicit_values: [age: 42]) == %BasicConfyExample{name: "Jabberwocky", age: 42}
-      assert BasicConfyExample.load(explicit_values: [age: 43]) == %BasicConfyExample{name: "Jabberwocky", age: 43}
+      assert Confy.load(BasicConfyExample, explicit_values: [age: 42]) == %BasicConfyExample{name: "Jabberwocky", age: 42, colors: []}
+      assert BasicConfyExample.load(explicit_values: [age: 43]) == %BasicConfyExample{name: "Jabberwocky", age: 43, colors: []}
 
-      assert Confy.load_explicit(BasicConfyExample, age: 42) == %BasicConfyExample{name: "Jabberwocky", age: 42}
-      assert BasicConfyExample.load_explicit(age: 44) == %BasicConfyExample{name: "Jabberwocky", age: 44}
+      assert Confy.load_explicit(BasicConfyExample, age: 42) == %BasicConfyExample{name: "Jabberwocky", age: 42, colors: []}
+      assert BasicConfyExample.load_explicit(age: 44, colors: [:red, :green]) == %BasicConfyExample{name: "Jabberwocky", age: 44, colors: [:red, :green]}
 
       assert_raise(Confy.MissingRequiredFieldsError, fn ->
         Confy.load(BasicConfyExample)
@@ -31,6 +33,11 @@ defmodule ConfyTest do
       assert_raise(Confy.MissingRequiredFieldsError, fn ->
         Confy.load_explicit(BasicConfyExample, [])
       end)
+    end
+
+    test "compound parsers are used correctly" do
+      assert %BasicConfyExample{colors: [:red, :green, :blue]} = BasicConfyExample.load_explicit(age: 22, colors: "[:red, :green, :blue]")
+      assert %BasicConfyExample{colors: [:red, :cyan, :yellow]} = BasicConfyExample.load_explicit(age: 22, colors: [:red, "cyan", :yellow])
     end
 
     test "Warnings are shown when defining a configuration with missing doc strings" do
@@ -47,10 +54,10 @@ defmodule ConfyTest do
     end
 
     test "Reflection is in place" do
-      assert MapSet.new([:name, :age]) == BasicConfyExample.__confy__(:field_names)
-      assert %{name: "Jabberwocky"} == BasicConfyExample.__confy__(:defaults)
+      assert MapSet.new([:name, :age, :colors]) == BasicConfyExample.__confy__(:field_names)
+      assert %{name: "Jabberwocky", colors: []} == BasicConfyExample.__confy__(:defaults)
       assert MapSet.new([:age]) == BasicConfyExample.__confy__(:required_fields)
-      assert %{name: &Confy.Parsers.string/1, age: &Confy.Parsers.integer/1} == BasicConfyExample.__confy__(:parsers)
+      assert %{name: &Confy.Parsers.string/1, age: &Confy.Parsers.integer/1, colors: {&Confy.Parsers.list/2, &Confy.Parsers.atom/1}} == BasicConfyExample.__confy__(:parsers)
     end
 
   end
