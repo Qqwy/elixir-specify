@@ -128,13 +128,14 @@ If extra information is required about the configuration specification to write 
 
 ## Roadmap
 
-- Writing Tests
+- [x] Compound parsers for collections using `{collection_parser, element_parser}`-syntax, with provided `:list` parser.
+- [x] Writing basic Tests
   - [x] Confy.Parsers
-  - [ ] (50%) Main Confy module and functionality.
-  - [ ] Confy Providers.
-- Better/more examples
-- Thinking on how to handle environment variable names (capitalization, prefixes).
-- Environment Variables (System.get_env) provider
+  - [x] Main Confy module and functionality.
+- [ ] Confy Provider Tests.
+- [ ] Better/more examples
+- [ ] Thinking on how to handle environment variable names (capitalization, prefixes).
+- [ ] Environment Variables (System.get_env) provider
 - Stable release
 
 ## Possibilities for the future
