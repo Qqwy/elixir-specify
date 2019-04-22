@@ -155,4 +155,12 @@ defmodule Confy.ParsersTest do
                Parsers.unsafe_atom("Elixir.This.Module.Does.Not.Exist.Either2")
     end
   end
+
+  describe "list/2" do
+    property "works on lists" do
+      check all list <- list_of(atom(:alphanumeric)) do
+        assert {:ok, list} == Parsers.list(list, &Parsers.atom/1)
+      end
+    end
+  end
 end
