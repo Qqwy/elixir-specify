@@ -128,17 +128,24 @@ defmodule Confy.Parsers do
   If a list was passed in (or after turning a binary into a list), it will try to parse each of the elements in turn.
   """
   def list(list, elem_parser) when is_list(list) do
-    res_list = Enum.reduce_while(list, [], fn
-      elem, acc ->
-        case elem_parser.(elem) do
-          {:ok, res} -> {:cont, [res | acc]}
-          {:error, reason} ->
-            {:halt, {:error, "One of the elements of input list `#{inspect(list)}` failed to parse: \n#{reason}."}}
-        end
-    end)
+    res_list =
+      Enum.reduce_while(list, [], fn
+        elem, acc ->
+          case elem_parser.(elem) do
+            {:ok, res} ->
+              {:cont, [res | acc]}
+
+            {:error, reason} ->
+              {:halt,
+               {:error,
+                "One of the elements of input list `#{inspect(list)}` failed to parse: \n#{reason}."}}
+          end
+      end)
+
     case res_list do
       {:error, reason} ->
         {:error, reason}
+
       parsed_list when is_list(parsed_list) ->
         {:ok, Enum.reverse(parsed_list)}
     end
@@ -150,8 +157,11 @@ defmodule Confy.Parsers do
         list_ast
         |> Enum.map(&Macro.expand(&1, __ENV__))
         |> list(elem_parser)
+
       {:ok, _not_a_list} ->
-        {:error, "`#{inspect(binary)}`, while parseable as Elixir code, does not represent an Elixir list."}
+        {:error,
+         "`#{inspect(binary)}`, while parseable as Elixir code, does not represent an Elixir list."}
+
       {:error, reason} ->
         {:error, reason}
     end

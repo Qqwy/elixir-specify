@@ -1,6 +1,6 @@
 defmodule Confy.Provider.MixEnv do
   @moduledoc """
-  A Configuration Provider source based on `Mix.env()` / `Application.get_env`.
+  A Configuration Provider source based on `Mix.env()` / `Application.get_env/2`.
 
   """
   defstruct [:application, :key]

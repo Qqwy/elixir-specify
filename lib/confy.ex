@@ -99,6 +99,7 @@ defmodule Confy do
   - `__confy__(:defaults)` returns a Map containing only the `field_name => value`s of field names having default values.
   - `__confy__(:requireds)` returns a MapSet of atoms, one per required field in the configuration structure.
   - `__confy__(:parsers)` returns a Map of the format `field_name => parser`.
+  - `__confy__(:field_options)` returns a Map of the format `field_name => options`, where `options` is the keyword-list that was passed to the `field` macro.
   """
   defmacro defconfig(options \\ [], do: block) do
     quote do
@@ -126,6 +127,7 @@ defmodule Confy do
         # Reflection; part of 'public API' for Config Providers,
         # but not of public API for consumers of '__MODULE__'.
         @field_names Confy.__field_names__(config_fields)
+        @field_options Confy.__field_options__(config_fields)
         @defaults Confy.__defaults__(config_fields)
         @required_fields Confy.__required_fields__(config_fields)
         @parsers Confy.__parsers__(config_fields)
@@ -137,6 +139,7 @@ defmodule Confy do
 
         @doc false
         def __confy__(:field_names), do: @field_names
+        def __confy__(:field_options), do: @field_options
         def __confy__(:defaults), do: @defaults
         def __confy__(:required_fields), do: @required_fields
         def __confy__(:parsers), do: @parsers
@@ -257,6 +260,7 @@ defmodule Confy do
   # Upon failure, raises an appropriate error.
   defp try_load_and_parse!({name, values}, parsers, config_module, options) do
     parser = construct_parser(parsers[name])
+
     case parser.(hd(values)) do
       {:ok, value} ->
         {name, value}
@@ -372,7 +376,14 @@ defmodule Confy do
   # Handles the actual work of the `field` macro.
   def __field__(module, name, parser, field_documentation, options) do
     normalized_parser = normalize_parser(parser)
-    Module.put_attribute(module, :config_fields, %{name: name, parser: normalized_parser, original_parser: parser, documentation: field_documentation, options: options})
+
+    Module.put_attribute(module, :config_fields, %{
+      name: name,
+      parser: normalized_parser,
+      original_parser: parser,
+      documentation: field_documentation,
+      options: options
+    })
   end
 
   # Extracts the struct definition keyword list
@@ -394,7 +405,14 @@ defmodule Confy do
   def __config_doc__(config_fields) do
     acc =
       config_fields
-      |> Enum.reduce("", fn %{name: name, parser: parser, original_parser: original_parser, documentation: documentation, options: options}, acc ->
+      |> Enum.reduce("", fn %{
+                              name: name,
+                              parser: parser,
+                              original_parser: original_parser,
+                              documentation: documentation,
+                              options: options
+                            },
+                            acc ->
         doc = """
 
         ### #{name}
@@ -443,10 +461,13 @@ defmodule Confy do
 
       {collection_parser, parser} ->
         """
-        Validated/parsed by calling `fn thing -> (#{Macro.to_string(normalize_parser(collection_parser, 2))}).(thing, #{Macro.to_string(normalize_parser(parser))}) end`.
+        Validated/parsed by calling `fn thing -> (#{
+          Macro.to_string(normalize_parser(collection_parser, 2))
+        }).(thing, #{Macro.to_string(normalize_parser(parser))}) end`.
 
         (Specified as `{#{Macro.to_string(collection_parser)}, #{Macro.to_string(parser)}}`)
         """
+
       _other ->
         """
         Validated/parsed by calling #{Macro.to_string(parser)}.
@@ -495,6 +516,14 @@ defmodule Confy do
   end
 
   @doc false
+  # Builds a MapSet of all the fields
+  def __field_options__(config_fields) do
+    config_fields
+    |> Enum.map(fn %{name: name, options: options} -> {name, options} end)
+    |> Enum.into(%{})
+  end
+
+  @doc false
   # Builds a map of parsers for the fields.
   def __parsers__(config_fields) do
     config_fields
@@ -507,6 +536,7 @@ defmodule Confy do
   # Replaces simplified atom parsers with
   # an actual reference to the parser function in `Confy.Parsers`.
   defp normalize_parser(parser, arity \\ 1)
+
   defp normalize_parser(parser, arity) when is_atom(parser) do
     case Confy.Parsers.__info__(:functions)[parser] do
       nil ->
