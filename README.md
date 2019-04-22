@@ -134,10 +134,10 @@ If extra information is required about the configuration specification to write 
 - [x] Writing basic Tests
   - [x] Confy.Parsers
   - [x] Main Confy module and functionality.
-- [ ] Confy Provider Tests.
+- [x] Thinking on how to handle environment variable names (capitalization, prefixes).
+- [ ] (50%) Environment Variables (System.get_env) provider
+- [ ] (33%) Confy Provider Tests.
 - [ ] Better/more examples
-- [ ] Thinking on how to handle environment variable names (capitalization, prefixes).
-- [ ] Environment Variables (System.get_env) provider
 - Stable release
 
 ## Possibilities for the future
