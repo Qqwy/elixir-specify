@@ -157,16 +157,29 @@ defmodule Confy.ParsersTest do
   end
 
   describe "list/2" do
-    property "works on lists" do
+    property "works on lists of atoms" do
       check all list <- list_of(atom(:alphanumeric)) do
         assert {:ok, list} == Parsers.list(list, &Parsers.atom/1)
       end
     end
 
-    property "works on strings representing lists" do
+    property "works on strings representing lists of atoms" do
       check all list <- list_of(atom(:alphanumeric)) do
         str = inspect(list, limit: :infinity)
         assert {:ok, list} == Parsers.list(str, &Parsers.atom/1)
+      end
+    end
+
+    property "works on lists of integers" do
+      check all list <- list_of(integer()) do
+        assert {:ok, list} == Parsers.list(list, &Parsers.integer/1)
+      end
+    end
+
+    property "works on strings representing lists of integers" do
+      check all list <- list_of(integer()) do
+        str = inspect(list, limit: :infinity)
+        assert {:ok, list} == Parsers.list(str, &Parsers.integer/1)
       end
     end
   end
