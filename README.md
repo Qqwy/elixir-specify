@@ -1,11 +1,16 @@
-# Specify
+![](brand/logo-text.png)
+
+
+
+`Specify` is a library to create Comfortable, Explicit, Multi-Layered and Well-Documented Specifications for all your configurations, settings and options in Elixir.
 
 [![hex.pm version](https://img.shields.io/hexpm/v/specify.svg)](https://hex.pm/packages/specify)
 [![Build Status](https://travis-ci.org/Qqwy/elixir_confy.svg?branch=master)](https://travis-ci.org/Qqwy/elixir_confy)
 [![Inline docs](http://inch-ci.org/github/qqwy/elixir_specify.svg)](http://inch-ci.org/github/qqwy/elixir_specify)
 
+---
 
-Comfortable, Explicit, Multi-Layered and Well-Documented Specifications for all your configurations, settings and options in Elixir:
+Basic features:
 
 - Configuration is converted to a struct, with fields being parsed to their appropriate types.
 - Specify a stack of sources to fetch the configuration from.
@@ -13,8 +18,7 @@ Comfortable, Explicit, Multi-Layered and Well-Documented Specifications for all 
 - Fail-fast on missing or malformed values.
 - Auto-generated documentation based on your config specification.
 
-
-Configuration made with Specify is usually read _during runtime_ (like when starting a process) rather than during compile/boot-time. This is a contrast with how e.g. Mix configs or Distillery releases (on their own; they can be used in combination with Specify as well) work, since their configuration settings usually are fully set in stone already during compile-time.
+Specify can be used both to create normalized configuration structs during runtime and compile-time using both implicit external configuration sources and explicit arguments to a function call.
 
 ## Installation
 
