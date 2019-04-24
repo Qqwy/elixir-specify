@@ -1,4 +1,4 @@
-defmodule Confy.Provider.MixEnv do
+defmodule Specify.Provider.MixEnv do
   @moduledoc """
   A Configuration Provider source based on `Mix.env()` / `Application.get_env/2`.
 
@@ -16,20 +16,20 @@ defmodule Confy.Provider.MixEnv do
     %__MODULE__{application: application, key: key}
   end
 
-  defimpl Confy.Provider do
-    def load(%Confy.Provider.MixEnv{application: nil, key: nil}, module) do
+  defimpl Specify.Provider do
+    def load(%Specify.Provider.MixEnv{application: nil, key: nil}, module) do
       {:ok, Enum.into(Application.get_all_env(module), %{})}
     end
 
-    def load(%Confy.Provider.MixEnv{application: application, key: nil}, module) do
-      load(%Confy.Provider.MixEnv{application: application, key: module}, module)
+    def load(%Specify.Provider.MixEnv{application: application, key: nil}, module) do
+      load(%Specify.Provider.MixEnv{application: application, key: module}, module)
     end
 
-    def load(%Confy.Provider.MixEnv{application: application, key: key}, _module) do
+    def load(%Specify.Provider.MixEnv{application: application, key: key}, _module) do
       case Application.get_env(
              application,
              key,
-             :there_is_no_confy_configuration_in_this_application_environment!
+             :there_is_no_specify_configuration_in_this_application_environment!
            ) do
         map when is_map(map) ->
           {:ok, map}
@@ -37,7 +37,7 @@ defmodule Confy.Provider.MixEnv do
         list when is_list(list) ->
           {:ok, Enum.into(list, %{})}
 
-        :there_is_no_confy_configuration_in_this_application_environment! ->
+        :there_is_no_specify_configuration_in_this_application_environment! ->
           {:error, :not_found}
 
         _other ->

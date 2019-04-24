@@ -1,9 +1,9 @@
-defmodule Confy.ParsersTest do
+defmodule Specify.ParsersTest do
   use ExUnit.Case
   use ExUnitProperties
 
-  doctest Confy.Parsers
-  alias Confy.Parsers
+  doctest Specify.Parsers
+  alias Specify.Parsers
 
   describe "integer/1" do
     property "works on integers" do

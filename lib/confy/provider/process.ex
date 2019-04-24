@@ -1,4 +1,4 @@
-defmodule Confy.Provider.Process do
+defmodule Specify.Provider.Process do
   defstruct [:key]
 
   @moduledoc """
@@ -14,20 +14,20 @@ defmodule Confy.Provider.Process do
     %__MODULE__{key: key}
   end
 
-  defimpl Confy.Provider do
-    def load(%Confy.Provider.Process{key: nil}, module) do
-      load(%Confy.Provider.Process{key: module}, module)
+  defimpl Specify.Provider do
+    def load(%Specify.Provider.Process{key: nil}, module) do
+      load(%Specify.Provider.Process{key: module}, module)
     end
 
-    def load(%Confy.Provider.Process{key: key}, _module) do
-      case Process.get(key, :there_is_no_confy_configuration_in_this_process_dictionary!) do
+    def load(%Specify.Provider.Process{key: key}, _module) do
+      case Process.get(key, :there_is_no_specify_configuration_in_this_process_dictionary!) do
         map when is_map(map) ->
           {:ok, map}
 
         list when is_list(list) ->
           {:ok, Enum.into(list, %{})}
 
-        :there_is_no_confy_configuration_in_this_process_dictionary! ->
+        :there_is_no_specify_configuration_in_this_process_dictionary! ->
           {:error, :not_found}
 
         _other ->
@@ -39,7 +39,7 @@ end
 
 # TODO: Should we even allow this?
 # Looking into another process' dictionary is probably bad style, isn't it?
-defimpl Confy.Provider, for: PID do
+defimpl Specify.Provider, for: PID do
   def load(process, module) do
     {:dictionary, res} = Process.info(process, :dictionary)
 

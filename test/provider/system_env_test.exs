@@ -1,6 +1,6 @@
 defmodule Pet do
-  require Confy
-  Confy.defconfig do
+  require Specify
+  Specify.defconfig do
     @doc "The name of the pet"
     field :name, :string
     @doc "is it a dog or a cat?"
@@ -8,10 +8,10 @@ defmodule Pet do
   end
 end
 
-defmodule Confy.Provider.SystemEnvTest do
+defmodule Specify.Provider.SystemEnvTest do
   use ExUnit.Case
   use ExUnitProperties
 
 
-  doctest Confy.Provider.SystemEnv
+  doctest Specify.Provider.SystemEnv
 end
