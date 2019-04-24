@@ -69,7 +69,7 @@ iex> Cosette.CastleOnACloud.load(explicit_values: [lullaby: "I love you very muc
 
 ### Mandatory Fields 
 
-Notice that since the `;lullaby`-field is mandatory, if it is not defined in any of the configuration sources, an error will be thrown:
+Notice that since the `:lullaby`-field is mandatory, if it is not defined in any of the configuration sources, an error will be thrown:
 
 ```elixir
 Cosette.CastleOnACloud.load
