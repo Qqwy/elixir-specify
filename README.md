@@ -1,7 +1,7 @@
 # Specify
 
 [![hex.pm version](https://img.shields.io/hexpm/v/specify.svg)](https://hex.pm/packages/specify)
-[![Build Status](https://travis-ci.org/Qqwy/elixir_specify.svg?branch=master)](https://travis-ci.org/Qqwy/elixir_specify)
+[![Build Status](https://travis-ci.org/Qqwy/elixir_confy.svg?branch=master)](https://travis-ci.org/Qqwy/elixir_confy)
 [![Inline docs](http://inch-ci.org/github/qqwy/elixir_specify.svg)](http://inch-ci.org/github/qqwy/elixir_specify)
 
 
