@@ -1,9 +1,9 @@
-defmodule Confy.Parsers do
+defmodule Specify.Parsers do
   @moduledoc """
   Simple functions to parse strings to datatypes commonly used during configuration.
 
-  These functions can be used as parser/validator function in a call to `Confy.Schema.field`,
-  by using their shorthand name (`:integer` as shorthand for `&Confy.Parsers.integer/1`).
+  These functions can be used as parser/validator function in a call to `Specify.Schema.field`,
+  by using their shorthand name (`:integer` as shorthand for `&Specify.Parsers.integer/1`).
 
   (Of course, using their longhand name works as well.)
 

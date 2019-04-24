@@ -1,8 +1,8 @@
-# Confy
+# Specify
 
-[![hex.pm version](https://img.shields.io/hexpm/v/confy.svg)](https://hex.pm/packages/confy)
-[![Build Status](https://travis-ci.org/Qqwy/elixir_confy.svg?branch=master)](https://travis-ci.org/Qqwy/elixir_confy)
-[![Inline docs](http://inch-ci.org/github/qqwy/elixir_confy.svg)](http://inch-ci.org/github/qqwy/elixir_confy)
+[![hex.pm version](https://img.shields.io/hexpm/v/specify.svg)](https://hex.pm/packages/specify)
+[![Build Status](https://travis-ci.org/Qqwy/elixir_specify.svg?branch=master)](https://travis-ci.org/Qqwy/elixir_specify)
+[![Inline docs](http://inch-ci.org/github/qqwy/elixir_specify.svg)](http://inch-ci.org/github/qqwy/elixir_specify)
 
 
 Comfortable, Explicit, Multi-Layered and Well-Documented specifications for Dynamic Configuration in Elixir:
@@ -14,21 +14,21 @@ Comfortable, Explicit, Multi-Layered and Well-Documented specifications for Dyna
 - Auto-generated documentation based on your config specification.
 
 
-Configuration made with Confy is usually read _during runtime_ (like when starting a process) rather than during compile/boot-time. This is a contrast with how e.g. Mix configs or Distillery releases (on their own; they can be used in combination with Confy as well) work, since their configuration settings usually are fully set in stone already during compile-time.
+Configuration made with Specify is usually read _during runtime_ (like when starting a process) rather than during compile/boot-time. This is a contrast with how e.g. Mix configs or Distillery releases (on their own; they can be used in combination with Specify as well) work, since their configuration settings usually are fully set in stone already during compile-time.
 
 ## Installation
 
-You can install Confy by adding `confy` to your list of dependencies in `mix.exs`:
+You can install Specify by adding `specify` to your list of dependencies in `mix.exs`:
 
 ```elixir
 def deps do
   [
-    {:confy, "~> 0.1.0"}
+    {:specify, "~> 0.1.0"}
   ]
 end
 ```
 
-Documentation can be found at [https://hexdocs.pm/confy](https://hexdocs.pm/confy).
+Documentation can be found at [https://hexdocs.pm/specify](https://hexdocs.pm/specify).
 
 ## Examples
 
@@ -39,8 +39,8 @@ Basic usage is as follows:
 ```elixir
 
 defmodule Cosette.CastleOnACloud do
-  require Confy
-  Confy.defconfig do
+  require Specify
+  Specify.defconfig do
     @doc "there are no floors for me to sweep"
     field :floors_to_sweep, :integer, default: 0
 
@@ -73,9 +73,9 @@ Notice that since the `;lullaby`-field is mandatory, if it is not defined in any
 
 ```elixir
 Cosette.CastleOnACloud.load
-** (Confy.MissingRequiredFieldsError) Missing required fields for `Elixir.Cosette.CastleOnACloud`: `:lullaby`.
-    (confy) lib/confy.ex:179: Confy.prevent_missing_required_fields!/3
-    (confy) lib/confy.ex:147: Confy.load/2
+** (Specify.MissingRequiredFieldsError) Missing required fields for `Elixir.Cosette.CastleOnACloud`: `:lullaby`.
+    (specify) lib/specify.ex:179: Specify.prevent_missing_required_fields!/3
+    (specify) lib/specify.ex:147: Specify.load/2
 ```
 
 ### Loading from Sources
@@ -88,7 +88,7 @@ iex> Application.put_env(Cosette.CastleOnACloud, :lullaby, "sleep little darling
 config Cosette.CastleOnACloud, lullaby: "sleep little darling"
 ```
 ```elixir
-iex> Cosette.CastleOnACloud.load(sources: [Confy.Provider.MixEnv])
+iex> Cosette.CastleOnACloud.load(sources: [Specify.Provider.MixEnv])
 %Cosette.CastleOnACloud{
   crying_allowed: false,
   floors_to_sweep: 0,
@@ -101,8 +101,8 @@ Rather than passing in the sources when loading the configuration, it often make
 
 ```elixir
 defmodule Cosette.CastleOnACloud do
-  require Confy
-  Confy.defconfig sources: [Confy.Provider.MixEnv] do
+  require Specify
+  Specify.defconfig sources: [Specify.Provider.MixEnv] do
     # ...
   end
 end
@@ -111,19 +111,19 @@ end
 ## Providers
 
 Providers can be specified by passing them to the `sources:` option (while loading the configuration structure or while defining it).
-They can also be set globally by altering the `sources:` key of the `Confy` application environment, or per-process using the `:sources` subkey of the `Confy` key in the current process' dictionary (`Process.put_env`).
+They can also be set globally by altering the `sources:` key of the `Specify` application environment, or per-process using the `:sources` subkey of the `Specify` key in the current process' dictionary (`Process.put_env`).
 
-Be aware that for bootstrapping reasons, it is impossible to override the `:sources` field globally in an external source (because Confy would not know where to find it).
+Be aware that for bootstrapping reasons, it is impossible to override the `:sources` field globally in an external source (because Specify would not know where to find it).
 
 Most providers have sensible default values on how they work:
-- `Confy.Provider.Process` will look at the configured `key`, but will default to the configuration specification module name.
-- `Confy.Providers.MixEnv` will look at the configured `application_name` and `key`, but will default to the whole environment of an application (`Application.get_all_env`) if no key was set, with `application_name` defaulting to the configuration specification module name.
+- `Specify.Provider.Process` will look at the configured `key`, but will default to the configuration specification module name.
+- `Specify.Providers.MixEnv` will look at the configured `application_name` and `key`, but will default to the whole environment of an application (`Application.get_all_env`) if no key was set, with `application_name` defaulting to the configuration specification module name.
 
 ## Writing Providers
 
-Providers implement the `Confy.Provider` protocol, which consists of only one function: `load/2`.
+Providers implement the `Specify.Provider` protocol, which consists of only one function: `load/2`.
 Its first argument is the implementation's own struct, the second argument being the configuration specification's module name.
-If extra information is required about the configuration specification to write a good implementation, the Reflection function `module_name.__confy__`  can be used to look these up.
+If extra information is required about the configuration specification to write a good implementation, the Reflection function `module_name.__specify__`  can be used to look these up.
 
 
 ## Roadmap
@@ -132,11 +132,11 @@ If extra information is required about the configuration specification to write 
 - [x] Main functionality documentation.
 - [x] Parsers documentation.
 - [x] Writing basic Tests
-  - [x] Confy.Parsers
-  - [x] Main Confy module and functionality.
+  - [x] Specify.Parsers
+  - [x] Main Specify module and functionality.
 - [x] Thinking on how to handle environment variable names (capitalization, prefixes).
 - [ ] (50%) Environment Variables (System.get_env) provider
-- [ ] (33%) Confy Provider Tests.
+- [ ] (33%) Specify Provider Tests.
 - [ ] Better/more examples
 - Stable release
 
@@ -152,10 +152,10 @@ If extra information is required about the configuration specification to write 
 
 ## Changelog
 
-- 0.3.0 - Changed `overrides:` to `explicit_values:` and added `Confy.load_explicit/3` function. (Also added tests and fixed parser bugs).
+- 0.3.0 - Changed `overrides:` to `explicit_values:` and added `Specify.load_explicit/3` function. (Also added tests and fixed parser bugs).
 - 0.2.0 - Initially released version
 
 
 ## Attribution
 
-I want to thank Chris Keathley for his interesting library [Vapor](https://github.com/keathley/vapor) which helped inspire Confy.
+I want to thank Chris Keathley for his interesting library [Vapor](https://github.com/keathley/vapor) which helped inspire Specify.

@@ -1,11 +1,11 @@
-defmodule Confy.MixProject do
-  @source_url "https://github.com/Qqwy/elixir_confy"
+defmodule Specify.MixProject do
+  @source_url "https://github.com/Qqwy/elixir_specify"
   use Mix.Project
 
   def project do
     [
-      app: :confy,
-      version: "0.3.0",
+      app: :specify,
+      version: "0.4.0",
       elixir: "~> 1.7",
       start_permanent: Mix.env() == :prod,
       deps: deps(),
@@ -44,7 +44,7 @@ defmodule Confy.MixProject do
   defp package do
     # These are the default files included in the package
     [
-      name: :confy,
+      name: :specify,
       files: ["lib", "mix.exs", "README*", "LICENSE"],
       maintainers: ["Wiebe-Marten Wijnja/Qqwy"],
       licenses: ["MIT"],

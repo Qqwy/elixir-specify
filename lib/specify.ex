@@ -1,6 +1,6 @@
-defmodule Confy do
+defmodule Specify do
   @moduledoc """
-  Confy allows you to make your configuration explicit:
+  Specify allows you to make your configuration explicit:
 
   - Specify exactly what fields are expected.
   - Specify exactly what values these fields might take, by giving them parser-functions.
@@ -18,25 +18,25 @@ defmodule Confy do
     @moduledoc """
     Default exception to be raised when it is impossible to parse one of the configuration values.
 
-    (See also `Confy.Parsers`)
+    (See also `Specify.Parsers`)
     """
     defexception [:message]
   end
 
   defmodule Schema do
     @moduledoc """
-    Functions that can be used inside `Confy.defconfig/2`.
+    Functions that can be used inside `Specify.defconfig/2`.
     """
 
     @doc """
     Specifies a field that is part of the configuration struct.
 
-    Can/should only be called inside a call to `Confy.defconfig`.
+    Can/should only be called inside a call to `Specify.defconfig`.
 
     - `name` should be an atom representing the field. It will also become the field name for the struct that is created.
     - `parser` should either be:
       - an arity-one function capture like `&YourModule.some_type_parser/1`.
-      - An atom representing one of the common parser function names in `Confy.Parsers` like `:integer`, `:string`, `:boolean` or `:term`.
+      - An atom representing one of the common parser function names in `Specify.Parsers` like `:integer`, `:string`, `:boolean` or `:term`.
       - A two-element tuple like `{:list, :atom}`. The first element represents the 'collection parser' which is an arity-2 function that takes the 'element parser' as second argument. The second element is the 'element parser'. Both of the elements listed in the tuple can also be either an atom, or a function capture with the correct arity. (like `{&YourAwesomeModule.fancy_collection/2, :integer}`).
 
     Supported field options are:
@@ -63,7 +63,7 @@ defmodule Confy do
               ""
           end
 
-        Confy.__field__(
+        Specify.__field__(
           __MODULE__,
           unquote(name),
           unquote(parser),
@@ -77,33 +77,33 @@ defmodule Confy do
   @doc """
   Defines a configuration structure in the current module.
 
-  Fields are added to this configuration structure by calling `Confy.Schema.field/3`
-  (which can be called just as `field` because `Confy.Schema` is autoamatically imported into the
+  Fields are added to this configuration structure by calling `Specify.Schema.field/3`
+  (which can be called just as `field` because `Specify.Schema` is autoamatically imported into the
   inner context of the call to `defconfig`.)
 
-  The `options` that can be passed to this module are used as defaults for the options passed to a call to `Confy.load/2` or `YourModule.load/1`.
+  The `options` that can be passed to this module are used as defaults for the options passed to a call to `Specify.load/2` or `YourModule.load/1`.
 
-  See also `Confy.Schema.field/3` and `Confy.Options`
+  See also `Specify.Schema.field/3` and `Specify.Options`
 
   ## Reflection
 
-  The special function `__confy__/1` will be defined on the module as well. It is not intended to be used
+  The special function `__specify__/1` will be defined on the module as well. It is not intended to be used
   by people that want to consume your configuration,
-  but it is there to e.g. allow `Confy.Provider` implementations to be smarter
+  but it is there to e.g. allow `Specify.Provider` implementations to be smarter
   in how they fetch the configuration for the module. For instance, configuration
   might be lazily fetched, when knowing what field names exist beforehand.
 
-  `YourModule.__confy__/1` supports the following publicly usable parameters:
+  `YourModule.__specify__/1` supports the following publicly usable parameters:
 
-  - `__confy__(:field_names)` returns a MapSet of atoms, one per field in the configuration structure.
-  - `__confy__(:defaults)` returns a Map containing only the `field_name => value`s of field names having default values.
-  - `__confy__(:requireds)` returns a MapSet of atoms, one per required field in the configuration structure.
-  - `__confy__(:parsers)` returns a Map of the format `field_name => parser`.
-  - `__confy__(:field_options)` returns a Map of the format `field_name => options`, where `options` is the keyword-list that was passed to the `field` macro.
+  - `__specify__(:field_names)` returns a MapSet of atoms, one per field in the configuration structure.
+  - `__specify__(:defaults)` returns a Map containing only the `field_name => value`s of field names having default values.
+  - `__specify__(:requireds)` returns a MapSet of atoms, one per required field in the configuration structure.
+  - `__specify__(:parsers)` returns a Map of the format `field_name => parser`.
+  - `__specify__(:field_options)` returns a Map of the format `field_name => options`, where `options` is the keyword-list that was passed to the `field` macro.
   """
   defmacro defconfig(options \\ [], do: block) do
     quote do
-      import Confy.Schema
+      import Specify.Schema
       Module.register_attribute(__MODULE__, :config_fields, accumulate: true)
 
       try do
@@ -119,18 +119,18 @@ defmodule Confy do
         Module.put_attribute(
           __MODULE__,
           :moduledoc,
-          {line_number, existing_moduledoc <> Confy.__config_doc__(config_fields)}
+          {line_number, existing_moduledoc <> Specify.__config_doc__(config_fields)}
         )
 
-        defstruct(Confy.__struct_fields__(config_fields))
+        defstruct(Specify.__struct_fields__(config_fields))
 
         # Reflection; part of 'public API' for Config Providers,
         # but not of public API for consumers of '__MODULE__'.
-        @field_names Confy.__field_names__(config_fields)
-        @field_options Confy.__field_options__(config_fields)
-        @defaults Confy.__defaults__(config_fields)
-        @required_fields Confy.__required_fields__(config_fields)
-        @parsers Confy.__parsers__(config_fields)
+        @field_names Specify.__field_names__(config_fields)
+        @field_options Specify.__field_options__(config_fields)
+        @defaults Specify.__defaults__(config_fields)
+        @required_fields Specify.__required_fields__(config_fields)
+        @parsers Specify.__parsers__(config_fields)
 
         # Super secret private reflection; doing this at compile-time speeds up `load`.
         @la_defaults for {name, val} <- @defaults, into: %{}, do: {name, [val]}
@@ -138,29 +138,29 @@ defmodule Confy do
         @loading_accumulator Map.merge(@la_defaults, @la_requireds)
 
         @doc false
-        def __confy__(:field_names), do: @field_names
-        def __confy__(:field_options), do: @field_options
-        def __confy__(:defaults), do: @defaults
-        def __confy__(:required_fields), do: @required_fields
-        def __confy__(:parsers), do: @parsers
-        def __confy__(:__loading_begin_accumulator__), do: @loading_accumulator
+        def __specify__(:field_names), do: @field_names
+        def __specify__(:field_options), do: @field_options
+        def __specify__(:defaults), do: @defaults
+        def __specify__(:required_fields), do: @required_fields
+        def __specify__(:parsers), do: @parsers
+        def __specify__(:__loading_begin_accumulator__), do: @loading_accumulator
 
         @doc """
         Loads, parses, and normalizes the configuration of `#{inspect(__MODULE__)}`, based on the current source settings, returning the result as a struct.
 
         For more information about the options this function supports, see
-        `Confy.load/2` and `Confy.Options`
+        `Specify.load/2` and `Specify.Options`
         """
-        def load(options \\ []), do: Confy.load(__MODULE__, options ++ unquote(options))
+        def load(options \\ []), do: Specify.load(__MODULE__, options ++ unquote(options))
 
         @doc """
         Loads, parses and normalizes the configuration of `#{inspect(__MODULE__)}`, using the provided `explicit_values` (and falling back to values configured elsewhere)
 
         For more information about the options this function supports, see
-        `Confy.load_explicit/3` and `Confy.Options`
+        `Specify.load_explicit/3` and `Specify.Options`
         """
         def load_explicit(explicit_values, options \\ []),
-          do: Confy.load_explicit(__MODULE__, explicit_values, options ++ unquote(options))
+          do: Specify.load_explicit(__MODULE__, explicit_values, options ++ unquote(options))
 
         :ok
       end
@@ -172,7 +172,7 @@ defmodule Confy do
 
   (This is the more general way of calling `config_module.load/1`).
 
-  See `Confy.Options` for more information of the options that can be supplied to this function,
+  See `Specify.Options` for more information of the options that can be supplied to this function,
   and how it can be configured further.
   """
   def load(config_module, options \\ []) do
@@ -193,7 +193,7 @@ defmodule Confy do
     else
       prevent_missing_required_fields!(config_module, sources_configs, options)
 
-      parsers = config_module.__confy__(:parsers)
+      parsers = config_module.__specify__(:parsers)
 
       sources_configs
       |> Enum.map(&try_load_and_parse!(&1, parsers, config_module, options))
@@ -204,10 +204,10 @@ defmodule Confy do
   @doc """
   Loads, parses and normalizes the configuration of `config_module`, using the provided `explicit_values` (and falling back to values configured elsewhere)
 
-  This call is conceptually the same as `Confy.load(config_module, [explicit_values: [] | options])`, but makes it more explicit that values
+  This call is conceptually the same as `Specify.load(config_module, [explicit_values: [] | options])`, but makes it more explicit that values
   are meant to be passed in as arguments.
 
-  Prefer this function if you do not intend to use Confy's 'cascading configuration' functionality, such as when e.g. just parsing options passed to a function,
+  Prefer this function if you do not intend to use Specify's 'cascading configuration' functionality, such as when e.g. just parsing options passed to a function,
   `use`-statement or other macro.
   """
   def load_explicit(config_module, explicit_values, options \\ []) do
@@ -221,7 +221,7 @@ defmodule Confy do
       explicit_values
       |> Keyword.keys()
       |> MapSet.new()
-      |> MapSet.difference(config_module.__confy__(:field_names))
+      |> MapSet.difference(config_module.__specify__(:field_names))
 
     if(Enum.any?(improper_explicit_values)) do
       raise ArgumentError,
@@ -272,7 +272,7 @@ defmodule Confy do
 
       other ->
         raise ArgumentError,
-              "Improper Confy configuration parser result. Parser `#{inspect(parsers[name])}` is supposed to return either {:ok, val} or {:error, reason} but instead, `#{
+              "Improper Specify configuration parser result. Parser `#{inspect(parsers[name])}` is supposed to return either {:ok, val} or {:error, reason} but instead, `#{
                 inspect(other)
               }` was returned."
     end
@@ -286,40 +286,40 @@ defmodule Confy do
     elem_parser
   end
 
-  # Parses `options` into a normalized `Confy.Options` struct.
+  # Parses `options` into a normalized `Specify.Options` struct.
   defp parse_options(config_module, options)
   # Catch bootstrapping-case
-  defp parse_options(Confy.Options, options) do
+  defp parse_options(Specify.Options, options) do
     %{
-      __struct__: Confy.Options,
+      __struct__: Specify.Options,
       sources:
         options[:sources] ||
-          Process.get(:confy, [])[:sources] ||
-          Application.get_env(Confy, :sources) ||
+          Process.get(:specify, [])[:sources] ||
+          Application.get_env(Specify, :sources) ||
           [],
       missing_fields_error:
         options[:missing_fields_error] ||
-          Process.get(Confy, [])[:missing_fields_error] ||
-          Application.get_env(Confy, :missing_fields_error) ||
-          Confy.MissingRequiredFieldsError,
+          Process.get(Specify, [])[:missing_fields_error] ||
+          Application.get_env(Specify, :missing_fields_error) ||
+          Specify.MissingRequiredFieldsError,
       parsing_error:
         options[:parsing_error] ||
-          Process.get(Confy, [])[:parsing_error] ||
-          Application.get_env(Confy, :parsing_error) ||
-          Confy.ParsingError,
+          Process.get(Specify, [])[:parsing_error] ||
+          Application.get_env(Specify, :parsing_error) ||
+          Specify.ParsingError,
       explain:
         options[:explain] ||
           false
     }
   end
 
-  defp parse_options(_config_module, options), do: Confy.Options.load(explicit_values: options)
+  defp parse_options(_config_module, options), do: Specify.Options.load(explicit_values: options)
 
   # Turns a list of Access-implementations into a map of lists.
   # In the end, empty values will look like `key: []`.
   # And filled ones like `key: [something | ...]`
   defp list_of_configs2config_of_lists(list_of_configs, config_module) do
-    begin_accumulator = config_module.__confy__(:__loading_begin_accumulator__)
+    begin_accumulator = config_module.__specify__(:__loading_begin_accumulator__)
 
     list_of_configs
     |> Enum.reduce(begin_accumulator, fn config, acc ->
@@ -336,7 +336,7 @@ defmodule Confy do
   end
 
   defp load_source(source, config_module) do
-    {source, Confy.Provider.load(source, config_module)}
+    {source, Specify.Provider.load(source, config_module)}
   end
 
   # Logs errors on sources that cannot be found,
@@ -443,7 +443,7 @@ defmodule Confy do
     """
     ## Configuration structure documentation:
 
-    This configuration was made using the `Confy` library.
+    This configuration was made using the `Specify` library.
     It contains the following fields:
 
     #{acc}
@@ -534,17 +534,17 @@ defmodule Confy do
   end
 
   # Replaces simplified atom parsers with
-  # an actual reference to the parser function in `Confy.Parsers`.
+  # an actual reference to the parser function in `Specify.Parsers`.
   defp normalize_parser(parser, arity \\ 1)
 
   defp normalize_parser(parser, arity) when is_atom(parser) do
-    case Confy.Parsers.__info__(:functions)[parser] do
+    case Specify.Parsers.__info__(:functions)[parser] do
       nil ->
         raise ArgumentError,
-              "Parser shorthand `#{inspect(parser)}` was not recognized. Only atoms representing names of functions that live in `Confy.Parsers` are."
+              "Parser shorthand `#{inspect(parser)}` was not recognized. Only atoms representing names of functions that live in `Specify.Parsers` are."
 
       ^arity ->
-        Function.capture(Confy.Parsers, parser, arity)
+        Function.capture(Specify.Parsers, parser, arity)
     end
   end
 
