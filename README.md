@@ -5,7 +5,7 @@
 [![Inline docs](http://inch-ci.org/github/qqwy/elixir_specify.svg)](http://inch-ci.org/github/qqwy/elixir_specify)
 
 
-Comfortable, Explicit, Multi-Layered and Well-Documented specifications for Dynamic Configuration in Elixir:
+Comfortable, Explicit, Multi-Layered and Well-Documented Specifications for all your configurations, settings and options in Elixir:
 
 - Configuration is converted to a struct, with fields being parsed to their appropriate types.
 - Specify a stack of sources to fetch the configuration from.
@@ -23,7 +23,7 @@ You can install Specify by adding `specify` to your list of dependencies in `mix
 ```elixir
 def deps do
   [
-    {:specify, "~> 0.1.0"}
+    {:specify, "~> 0.4.0"}
   ]
 end
 ```
@@ -152,6 +152,7 @@ If extra information is required about the configuration specification to write 
 
 ## Changelog
 
+- 0.4.0 - Name change: from 'Confy' to 'Specify'. This name has been chosen to be more clear about the intent of the library.
 - 0.3.0 - Changed `overrides:` to `explicit_values:` and added `Specify.load_explicit/3` function. (Also added tests and fixed parser bugs).
 - 0.2.0 - Initially released version
 

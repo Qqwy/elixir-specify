@@ -37,7 +37,7 @@ defmodule Specify.MixProject do
 
   defp description do
     """
-    Comfortable, Explicit, Multi-Layered and Well-Documented specifications for Dynamic Configuration
+    Comfortable, Explicit, Multi-Layered and Well-Documented Specifications for all your configurations, settings and options
     """
   end
 
