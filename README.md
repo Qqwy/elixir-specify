@@ -1,11 +1,10 @@
-![](brand/logo-text.png)
-
-
+![](https://raw.githubusercontent.com/Qqwy/elixir_specify/master/brand/logo-text.png)
 
 `Specify` is a library to create Comfortable, Explicit, Multi-Layered and Well-Documented Specifications for all your configurations, settings and options in Elixir.
 
 [![hex.pm version](https://img.shields.io/hexpm/v/specify.svg)](https://hex.pm/packages/specify)
 [![Build Status](https://travis-ci.org/Qqwy/elixir_confy.svg?branch=master)](https://travis-ci.org/Qqwy/elixir_confy)
+[![Documentation](https://img.shields.io/badge/hexdocs-latest-blue.svg)](https://hexdocs.pm/specify/index.html)
 [![Inline docs](http://inch-ci.org/github/qqwy/elixir_specify.svg)](http://inch-ci.org/github/qqwy/elixir_specify)
 
 ---
@@ -37,7 +36,7 @@ Documentation can be found at [https://hexdocs.pm/specify](https://hexdocs.pm/sp
 ## Examples
 
 
-Basic usage is as follows:
+Basic usage is as follows, using `Specify.defconfig/1`:
 
 
 ```elixir
@@ -60,6 +59,7 @@ defmodule Cosette.CastleOnACloud do
 end
 ```
 
+and later `Specify.load/2`, `Specify.load_explicit/3` (or `YourModule.load/1`, `YourModule.load_explicit/2` which are automatically defined).
 ```
 iex> Cosette.CastleOnACloud.load(explicit_values: [lullaby: "I love you very much", crying_allowed: true])
 %Cosette.CastleOnACloud{
@@ -119,9 +119,16 @@ They can also be set globally by altering the `sources:` key of the `Specify` ap
 
 Be aware that for bootstrapping reasons, it is impossible to override the `:sources` field globally in an external source (because Specify would not know where to find it).
 
-Most providers have sensible default values on how they work:
+`Specify` comes with the following built-in providers:
+
+- `Specify.Provider.MixEnv`, which uses `Mix.env` / `Application.get_env` to read from the application environment.
+- `Specify.Provider.SystemEnv`, which uses `System.get_env` to read from system environment variables.
+- `Specify.Provider.Process`, which uses `Process.get` to read from the current process' dictionary.
+
+Often, Providers have sensible default values on how they work, making their usage simpler:
 - `Specify.Provider.Process` will look at the configured `key`, but will default to the configuration specification module name.
 - `Specify.Providers.MixEnv` will look at the configured `application_name` and `key`, but will default to the whole environment of an application (`Application.get_all_env`) if no key was set, with `application_name` defaulting to the configuration specification module name.
+- `Specify.Providers.SystemEnv` will look at the configured `prefix` but will default to the module name (in all caps), followed by the field name (in all caps, separated by underscores). What names should be used for a field is also configurable.
 
 ## Writing Providers
 

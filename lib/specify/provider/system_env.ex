@@ -16,19 +16,23 @@ defmodule Specify.Provider.SystemEnv do
           @doc "The name of the pet"
           field :name, :string
           @doc "is it a dog or a cat?"
-          field :kind, :atom
+          field :kind, :atom, system_env_name: "TYPE"
         end
       end
 
+  Note that if a field has a different name than the environment variable you want to read from,
+  you can add the `system_env_name:` option when specifying the field, as has been done for the `:kind` field
+  in the example module above.
+
       iex> System.put_env("PET_NAME", "Timmy")
-      iex> System.put_env("PET_KIND", "cat")
+      iex> System.put_env("PET_TYPE", "cat")
       iex> Pet.load(sources: [Specify.Provider.SystemEnv.new()])
       %Pet{name: "Timmy", kind: :cat}
       iex> Pet.load(sources: [Specify.Provider.SystemEnv.new("PET")])
       %Pet{name: "Timmy", kind: :cat}
 
       iex> System.put_env("SECOND_PET_NAME", "John")
-      iex> System.put_env("SECOND_PET_KIND", "dog")
+      iex> System.put_env("SECOND_PET_TYPE", "dog")
       iex> Pet.load(sources: [Specify.Provider.SystemEnv.new("SECOND_PET")])
       %Pet{name: "John", kind: :dog}
 

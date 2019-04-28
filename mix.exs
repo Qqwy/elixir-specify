@@ -5,14 +5,15 @@ defmodule Specify.MixProject do
   def project do
     [
       app: :specify,
-      version: "0.4.2",
+      version: "0.4.3",
       elixir: "~> 1.7",
       start_permanent: Mix.env() == :prod,
       deps: deps(),
       elixirc_paths: elixirc_paths(Mix.env()),
       description: description(),
       package: package(),
-      source_url: @source_url
+      source_url: @source_url,
+      docs: docs()
     ]
   end
 
@@ -49,6 +50,14 @@ defmodule Specify.MixProject do
       maintainers: ["Wiebe-Marten Wijnja/Qqwy"],
       licenses: ["MIT"],
       links: %{"GitHub" => @source_url}
+    ]
+  end
+
+  defp docs do
+    [
+      main: "readme",
+      logo: "brand/logo.png",
+      extras: ["README.md"]
     ]
   end
 end

@@ -5,7 +5,7 @@ defmodule Pet do
     @doc "The name of the pet"
     field :name, :string
     @doc "is it a dog or a cat?"
-    field :kind, :atom
+    field :kind, :atom, system_env_name: "TYPE"
   end
 end
 
