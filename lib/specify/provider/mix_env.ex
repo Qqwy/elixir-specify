@@ -50,7 +50,7 @@ defmodule Specify.Provider.MixEnv do
       {:ok, Enum.into(Application.get_all_env(module), %{})}
     end
 
-    def load(%Specify.Provider.MixEnv{application: application, key: nil}, module) do
+    def load(%Specify.Provider.MixEnv{application: application, key: nil}, _module) do
       {:ok, Enum.into(Application.get_all_env(application), %{})}
     end
 
