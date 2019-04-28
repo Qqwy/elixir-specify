@@ -3,11 +3,33 @@ defmodule Specify.Provider.Process do
 
   @moduledoc """
   A Configuration Provider source based on the current process' Process Dictionary.
+
+  ### Examples
+
+  The following examples use the following specification for reference:
+
+      defmodule Elixir.Pet do
+        require Specify
+        Specify.defconfig do
+          @doc "The name of the pet"
+          field :name, :string
+          @doc "is it a dog or a cat?"
+          field :kind, :atom
+        end
+      end
   """
 
   @doc """
   By default, will try to use `Process.get(YourModule)` to fetch the source's configuration.
   A different key can be used by supplying a different `key` argument.
+
+      iex> Process.put(Pet, %{name: "Timmy", kind: :cat})
+      iex> Pet.load(sources: [Specify.Provider.Process.new(Pet)])
+      %Pet{name: "Timmy", kind: :cat}
+
+      iex> Process.put(:another_pet, %{name: "John", kind: :dog})
+      iex> Pet.load(sources: [Specify.Provider.Process.new(:another_pet)])
+      %Pet{name: "John", kind: :dog}
   """
 
   def new(key \\ nil) do

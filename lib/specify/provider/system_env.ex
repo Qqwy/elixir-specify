@@ -6,24 +6,31 @@ defmodule Specify.Provider.SystemEnv do
   `prefix` defaults to the capitalized name of the configuration specification module.
   `capitalized_field_name` is in `CONSTANT_CASE` (all-caps, with underscores as word separators).
 
-  iex> defmodule Elixir.Pet do
-  iex>   require Specify
-  iex>   Specify.defconfig do
-  iex>     @doc "The name of the pet"
-  iex>     field :name, :string
-  iex>     @doc "is it a dog or a cat?"
-  iex>     field :kind, :atom
-  iex>   end
-  iex> end
-  iex> System.put_env("PET_NAME", "Timmy")
-  iex> System.put_env("PET_KIND", "cat")
-  iex> Pet.load(sources: [Specify.Provider.SystemEnv.new("PET")])
-  %Pet{name: "Timmy", kind: :cat}
+  ### Examples
 
-  iex> System.put_env("SECOND_PET_NAME", "Bobby")
-  iex> System.put_env("SECOND_PET_KIND", "cat")
-  iex> Pet.load(sources: [Specify.Provider.SystemEnv.new("SECOND_PET")])
-  %Pet{name: "Bobby", kind: :cat}
+  The following examples use the following specification for reference:
+
+      defmodule Elixir.Pet do
+        require Specify
+        Specify.defconfig do
+          @doc "The name of the pet"
+          field :name, :string
+          @doc "is it a dog or a cat?"
+          field :kind, :atom
+        end
+      end
+
+      iex> System.put_env("PET_NAME", "Timmy")
+      iex> System.put_env("PET_KIND", "cat")
+      iex> Pet.load(sources: [Specify.Provider.SystemEnv.new()])
+      %Pet{name: "Timmy", kind: :cat}
+      iex> Pet.load(sources: [Specify.Provider.SystemEnv.new("PET")])
+      %Pet{name: "Timmy", kind: :cat}
+
+      iex> System.put_env("SECOND_PET_NAME", "John")
+      iex> System.put_env("SECOND_PET_KIND", "dog")
+      iex> Pet.load(sources: [Specify.Provider.SystemEnv.new("SECOND_PET")])
+      %Pet{name: "John", kind: :dog}
 
   """
   defstruct [:prefix]

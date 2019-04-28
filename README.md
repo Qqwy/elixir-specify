@@ -139,8 +139,8 @@ If extra information is required about the configuration specification to write 
   - [x] Specify.Parsers
   - [x] Main Specify module and functionality.
 - [x] Thinking on how to handle environment variable names (capitalization, prefixes).
-- [ ] (50%) Environment Variables (System.get_env) provider
-- [ ] (33%) Specify Provider Tests.
+- [x] Environment Variables (System.get_env) provider
+- [x] Specify Provider Tests.
 - [ ] Better/more examples
 - [ ] Stable release
 
@@ -156,6 +156,7 @@ If extra information is required about the configuration specification to write 
 
 ## Changelog
 
+- 0.4.1 - More tests; bugfix for the MixEnv provider.
 - 0.4.0 - Name change: from 'Confy' to 'Specify'. This name has been chosen to be more clear about the intent of the library.
 - 0.3.0 - Changed `overrides:` to `explicit_values:` and added `Specify.load_explicit/3` function. (Also added tests and fixed parser bugs).
 - 0.2.0 - Initially released version
