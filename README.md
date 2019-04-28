@@ -142,7 +142,7 @@ If extra information is required about the configuration specification to write 
 - [ ] (50%) Environment Variables (System.get_env) provider
 - [ ] (33%) Specify Provider Tests.
 - [ ] Better/more examples
-- Stable release
+- [ ] Stable release
 
 ## Possibilities for the future
 
