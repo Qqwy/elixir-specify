@@ -127,8 +127,8 @@ Be aware that for bootstrapping reasons, it is impossible to override the `:sour
 
 Often, Providers have sensible default values on how they work, making their usage simpler:
 - `Specify.Provider.Process` will look at the configured `key`, but will default to the configuration specification module name.
-- `Specify.Providers.MixEnv` will look at the configured `application_name` and `key`, but will default to the whole environment of an application (`Application.get_all_env`) if no key was set, with `application_name` defaulting to the configuration specification module name.
-- `Specify.Providers.SystemEnv` will look at the configured `prefix` but will default to the module name (in all caps), followed by the field name (in all caps, separated by underscores). What names should be used for a field is also configurable.
+- `Specify.Provider.MixEnv` will look at the configured `application_name` and `key`, but will default to the whole environment of an application (`Application.get_all_env`) if no key was set, with `application_name` defaulting to the configuration specification module name.
+- `Specify.Provider.SystemEnv` will look at the configured `prefix` but will default to the module name (in all caps), followed by the field name (in all caps, separated by underscores). What names should be used for a field is also configurable.
 
 ## Writing Providers
 
@@ -173,3 +173,5 @@ If extra information is required about the configuration specification to write 
 ## Attribution
 
 I want to thank Chris Keathley for his interesting library [Vapor](https://github.com/keathley/vapor) which helped inspire Specify.
+
+I also want to thank José Valim for the great conversations we've had about the advantages and disadvantages of various approaches to configuring Elixir applications.

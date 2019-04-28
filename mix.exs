@@ -56,7 +56,7 @@ defmodule Specify.MixProject do
   defp docs do
     [
       main: "readme",
-      logo: "brand/logo.png",
+      logo: "brand/logo-thicklines-25percent.png",
       extras: ["README.md"]
     ]
   end
