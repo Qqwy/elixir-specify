@@ -163,6 +163,7 @@ If extra information is required about the configuration specification to write 
 
 ## Changelog
 
+- 0.4.4 - Fixes references to validation/parsing functions in documentation.
 - 0.4.2 - Finishes provider tests; bugfix for the MixEnv provider.
 - 0.4.1 - Improves documentation.
 - 0.4.0 - Name change: from 'Confy' to 'Specify'. This name has been chosen to be more clear about the intent of the library.

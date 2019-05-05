@@ -454,7 +454,7 @@ defmodule Specify do
     case original_parser do
       atom when is_atom(atom) ->
         """
-        Validated/parsed by calling #{Macro.to_string(parser)}.
+        Validated/parsed by calling `#{Macro.to_string(parser) |> String.trim_leading("&")}`.
 
         (Specified as `#{inspect(atom)}`)
         """
@@ -462,7 +462,7 @@ defmodule Specify do
       {collection_parser, parser} ->
         """
         Validated/parsed by calling `fn thing -> (#{
-          Macro.to_string(normalize_parser(collection_parser, 2))
+          Macro.to_string(normalize_parser(collection_parser, 2)) |> String.trim_leading("&")
         }).(thing, #{Macro.to_string(normalize_parser(parser))}) end`.
 
         (Specified as `{#{Macro.to_string(collection_parser)}, #{Macro.to_string(parser)}}`)
@@ -470,7 +470,7 @@ defmodule Specify do
 
       _other ->
         """
-        Validated/parsed by calling #{Macro.to_string(parser)}.
+        Validated/parsed by calling `#{Macro.to_string(parser) |> String.trim_leading("&")}`.
         """
     end
   end
