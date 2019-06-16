@@ -46,7 +46,8 @@ defmodule Specify.Parsers do
   def float(binary) when is_binary(binary) do
     case Float.parse(binary) do
       {float, ""} -> {:ok, float}
-      :error -> {:error, "the binary `#{binary}` is not a float."}
+      {float, rest} -> {:error, "the binary `#{binary}` cannot be parserd to  a float."}
+      :error -> {:error, "the binary `#{binary}` cannot be parserd to a float."}
     end
   end
 

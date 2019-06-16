@@ -59,6 +59,13 @@ defmodule Specify.ParsersTest do
       end
     end
 
+    property "fails on binaries representing floats with trailing garbage" do
+      check all float <- float(),  postfix <- string(:printable), Float.parse(postfix) == :error, postfix != "" do
+        str = to_string(float)
+        assert {:error, _} = Parsers.float(str <> postfix)
+      end
+    end
+
     property "works on binaries representing integers" do
       check all int <- integer() do
         str = to_string(int)
