@@ -28,6 +28,7 @@ defmodule Specify.Parsers do
   def integer(binary) when is_binary(binary) do
     case Integer.parse(binary) do
       {int, ""} -> {:ok, int}
+      {int, rest} -> {:error, "the binary `#{binary}` cannot be parsed to an integer."}
       :error -> {:error, "the binary `#{binary}` cannot be parsed to an integer."}
     end
   end

@@ -19,14 +19,21 @@ defmodule Specify.ParsersTest do
       end
     end
 
-    # Yes, this property test does not work on inputs like "9".
-    # I am not sure what to do about that.
+    property "fails on binaries representing integers with trailing garbage" do
+      check all int <- integer(),  postfix <- string(:printable), Integer.parse(postfix) == :error, postfix != "" do
+        str = to_string(int)
+        assert {:error, _} = Parsers.integer(str <> postfix)
+      end
+    end
+
     property "fails on non-integer terms" do
       check all thing <- term() do
         if is_integer(thing) do
           assert {:ok, thing} = Parsers.integer(thing)
         else
-          assert {:error, _} = Parsers.integer(thing)
+          if !is_binary(thing) || Integer.parse(thing) == :error do
+            assert {:error, _} = Parsers.integer(thing)
+          end
         end
       end
     end
@@ -59,14 +66,14 @@ defmodule Specify.ParsersTest do
       end
     end
 
-    # Yes, this property test does not work on inputs like "9".
-    # I am not sure what to do about that.
     property "fails on non-integer terms" do
       check all thing <- term() do
         if(is_float(thing) or is_integer(thing)) do
           assert {:ok, 1.0 * thing} == Parsers.float(thing)
         else
-          assert {:error, _} = Parsers.float(thing)
+          if !is_binary(thing) || Float.parse(thing) == :error do
+            assert {:error, _} = Parsers.float(thing)
+          end
         end
       end
     end
