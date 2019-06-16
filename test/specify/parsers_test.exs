@@ -39,6 +39,90 @@ defmodule Specify.ParsersTest do
     end
   end
 
+  describe "nonnegative_integer/1" do
+    property "works on non-negative integers, fails on negative integers" do
+      check all int <- integer() do
+        if int >= 0 do
+          assert Parsers.nonnegative_integer(int) === {:ok, int}
+        else
+          assert {:error, _} = Parsers.nonnegative_integer(int)
+        end
+      end
+    end
+
+    property "works on binaries representing non-negative integers, fails on binaries representing negative integers" do
+      check all int <- integer(), int >= 0 do
+        str = to_string(int)
+        if int >= 0 do
+          assert Parsers.nonnegative_integer(str) === {:ok, int}
+        else
+          assert {:error, _} = Parsers.nonnegative_integer(str)
+        end
+      end
+    end
+
+    property "fails on binaries representing non-negative integers with trailing garbage" do
+      check all int <- integer(), postfix <- string(:printable), Integer.parse(postfix) == :error, postfix != "" do
+        str = to_string(int)
+        assert {:error, _} = Parsers.integer(str <> postfix)
+      end
+    end
+
+    property "fails on non-integer terms" do
+      check all thing <- term() do
+        if is_integer(thing) do
+          assert {:ok, thing} = Parsers.integer(thing)
+        else
+          if !is_binary(thing) || Integer.parse(thing) == :error do
+            assert {:error, _} = Parsers.integer(thing)
+          end
+        end
+      end
+    end
+  end
+
+  describe "positive_integer/1" do
+    property "works on positive integers, fails on other integers" do
+      check all int <- integer() do
+        if int > 0 do
+          assert Parsers.positive_integer(int) === {:ok, int}
+        else
+          assert {:error, _} = Parsers.positive_integer(int)
+        end
+      end
+    end
+
+    property "works on binaries representing positive integers, fails on binaries representing other integers" do
+      check all int <- integer(), int >= 0 do
+        str = to_string(int)
+        if int > 0 do
+          assert Parsers.positive_integer(str) === {:ok, int}
+        else
+          assert {:error, _} = Parsers.positive_integer(str)
+        end
+      end
+    end
+
+    property "fails on binaries representing non-negative integers with trailing garbage" do
+      check all int <- integer(), postfix <- string(:printable), Integer.parse(postfix) == :error, postfix != "" do
+        str = to_string(int)
+        assert {:error, _} = Parsers.integer(str <> postfix)
+      end
+    end
+
+    property "fails on non-integer terms" do
+      check all thing <- term() do
+        if is_integer(thing) do
+          assert {:ok, thing} = Parsers.integer(thing)
+        else
+          if !is_binary(thing) || Integer.parse(thing) == :error do
+            assert {:error, _} = Parsers.integer(thing)
+          end
+        end
+      end
+    end
+  end
+
   describe "float/1" do
     property "works on floats" do
       check all float <- float() do
@@ -73,13 +157,139 @@ defmodule Specify.ParsersTest do
       end
     end
 
-    property "fails on non-integer terms" do
+    property "fails on non-integer, non-float terms" do
       check all thing <- term() do
         if(is_float(thing) or is_integer(thing)) do
           assert {:ok, 1.0 * thing} == Parsers.float(thing)
         else
           if !is_binary(thing) || Float.parse(thing) == :error do
             assert {:error, _} = Parsers.float(thing)
+          end
+        end
+      end
+    end
+  end
+
+  describe "nonnegative_float/1" do
+    property "works on non-negative floats, fails on negative floats" do
+      check all float <- float() do
+        if float >= 0 do
+          assert Parsers.nonnegative_float(float) === {:ok, float}
+        else
+          assert {:error, _} = Parsers.nonnegative_float(float)
+        end
+      end
+    end
+
+    property "works on non-negative integers, fails on negative integers" do
+      check all int <- integer() do
+        if int >= 0 do
+          assert Parsers.nonnegative_float(int) === {:ok, int * 1.0}
+        else
+          assert {:error, _} = Parsers.nonnegative_float(int)
+        end
+      end
+    end
+
+    property "works on binaries representing non-negative floats, fails on binaries representing negative floats" do
+      check all float <- float() do
+        str = to_string(float)
+        if float >= 0 do
+          assert Parsers.nonnegative_float(str) === {:ok, float}
+        else
+          assert {:error, _} = Parsers.nonnegative_float(str)
+        end
+      end
+    end
+
+    property "fails on binaries representing floats with trailing garbage" do
+      check all float <- float(),  postfix <- string(:printable), Float.parse(postfix) == :error, postfix != "" do
+        str = to_string(float)
+        assert {:error, _} = Parsers.nonnegative_float(str <> postfix)
+      end
+    end
+
+    property "works on binaries representing non-negative integers, fails on binaries representing negative integers" do
+      check all int <- integer() do
+        str = to_string(int)
+        if int >= 0 do
+          assert Parsers.nonnegative_float(str) === {:ok, 1.0 * int}
+        else
+          assert {:error, _} = Parsers.nonnegative_float(str)
+        end
+      end
+    end
+
+    property "fails on non-float, non-integer terms" do
+      check all thing <- term() do
+        if (is_float(thing) or is_integer(thing)) and thing >= 0 do
+          assert {:ok, 1.0 * thing} == Parsers.nonnegative_float(thing)
+        else
+          if !is_binary(thing) || Float.parse(thing) == :error do
+            assert {:error, _} = Parsers.nonnegative_float(thing)
+          end
+        end
+      end
+    end
+  end
+
+  describe "positive_float/1" do
+    property "works on positive floats, fails on negative floats" do
+      check all float <- float() do
+        if float > 0 do
+          assert Parsers.positive_float(float) === {:ok, float}
+        else
+          assert {:error, _} = Parsers.positive_float(float)
+        end
+      end
+    end
+
+    property "works on positive integers, fails on negative integers" do
+      check all int <- integer() do
+        if int > 0 do
+          assert Parsers.positive_float(int) === {:ok, int * 1.0}
+        else
+          assert {:error, _} = Parsers.positive_float(int)
+        end
+      end
+    end
+
+    property "works on binaries representing positive floats, fails on binaries representing negative floats" do
+      check all float <- float() do
+        str = to_string(float)
+        if float > 0 do
+          assert Parsers.positive_float(str) === {:ok, float}
+        else
+          assert {:error, _} = Parsers.positive_float(str)
+        end
+      end
+    end
+
+    property "fails on binaries representing floats with trailing garbage" do
+      check all float <- float(),  postfix <- string(:printable), Float.parse(postfix) == :error, postfix != "" do
+        str = to_string(float)
+        assert {:error, _} = Parsers.positive_float(str <> postfix)
+      end
+    end
+
+    property "works on binaries representing positive integers, fails on binaries representing negative integers" do
+      check all int <- integer() do
+        str = to_string(int)
+        if int > 0 do
+          assert Parsers.positive_float(str) === {:ok, 1.0 * int}
+        else
+          assert {:error, _} = Parsers.positive_float(str)
+        end
+      end
+    end
+
+    property "fails on non-float, non-integer terms" do
+      check all thing <- term() do
+        if (is_float(thing) or is_integer(thing)) and thing > 0 do
+          assert {:ok, 1.0 * thing} == Parsers.nonnegative_float(thing)
+        else
+          if !is_binary(thing) || Float.parse(thing) == :error do
+            assert {:error, _} = Parsers.nonnegative_float(thing)
           end
         end
       end

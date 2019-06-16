@@ -36,6 +36,32 @@ defmodule Specify.Parsers do
   def integer(other), do: {:error, "#{inspect(other)} is not an integer."}
 
   @doc """
+  Similar to integer/1, but only accepts integers larger than 0.
+  """
+  def positive_integer(val) do
+    with {:ok, int} <- integer(val) do
+      if int > 0 do
+        {:ok, int}
+      else
+        {:error, "integer #{int} is not a positive integer."}
+      end
+    end
+  end
+
+  @doc """
+  Similar to integer/1, but only accepts integers larger than or equal to 0.
+  """
+  def nonnegative_integer(val) do
+    with {:ok, int} <- integer(val) do
+      if int >= 0 do
+        {:ok, int}
+      else
+        {:error, "integer #{int} is not a nonnegative integer."}
+      end
+    end
+  end
+
+  @doc """
   Parses a float and turns a binary string representing a float into an float.
 
   Will also accept integers, which are turned into their float equivalent.
@@ -52,6 +78,32 @@ defmodule Specify.Parsers do
   end
 
   def float(other), do: {:error, "`#{inspect(other)}` is not a float"}
+
+  @doc """
+  Similar to float/1, but only accepts floats larger than 0.
+  """
+  def positive_float(val) do
+    with {:ok, float} <- float(val) do
+      if float > 0 do
+        {:ok, float}
+      else
+        {:error, "float #{float} is not a positive float."}
+      end
+    end
+  end
+
+  @doc """
+  Similar to float/1, but only accepts floats larger than or equal to 0.
+  """
+  def nonnegative_float(val) do
+    with {:ok, float} <- float(val) do
+      if float >= 0 do
+        {:ok, float}
+      else
+        {:error, "float #{float} is not a nonnegative float."}
+      end
+    end
+  end
 
   @doc """
   Parses a binary string and turns anything that implements `String.Chars` into its binary string representation by calling `to_string/1` on it.
@@ -166,6 +218,35 @@ defmodule Specify.Parsers do
 
       {:error, reason} ->
         {:error, reason}
+    end
+  end
+
+  @doc """
+  Allows to pass in a 'timeout' which is a common setting for OTP-related features,
+  accepting either a positive integer, or the atom `:infinity`.
+  """
+  def timeout(raw) do
+    case integer(raw) do
+      {:ok, int} when is_integer(int) and int > 0 ->
+        {:ok, int}
+
+      {:ok, int} when is_integer(int) ->
+        {:error,
+         "Passed in non-positive integer value `#{int}`. Timeouts have to be positive (or the special atom `:infinity`)"}
+
+      {:error, _} ->
+        case atom(raw) do
+          {:ok, :infinity} ->
+            {:ok, :infinity}
+
+          {:ok, other} ->
+            {:error,
+             "#{raw} is neither a positive integer nor the special atom value `:infinity`"}
+
+          {:error, msg} ->
+            {:error,
+             "`#{raw}` is neither a positive integer nor the special atom value `:infinity`"}
+        end
     end
   end
 end
