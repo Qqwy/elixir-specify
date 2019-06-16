@@ -70,7 +70,7 @@ defmodule Specify.ParsersTest do
 
     property "fails on non-integer terms" do
       check all thing <- term() do
-        if is_integer(thing) do
+        if is_integer(thing) && thing >= 0 do
           assert {:ok, thing} = Parsers.nonnegative_integer(thing)
         else
           if !is_binary(thing) || Integer.parse(thing) == :error do
@@ -112,7 +112,7 @@ defmodule Specify.ParsersTest do
 
     property "fails on non-integer terms" do
       check all thing <- term() do
-        if is_integer(thing) do
+        if is_integer(thing) && thing > 0 do
           assert {:ok, thing} = Parsers.positive_integer(thing)
         else
           if !is_binary(thing) || Integer.parse(thing) == :error do
@@ -285,7 +285,7 @@ defmodule Specify.ParsersTest do
 
     property "fails on non-float, non-integer terms" do
       check all thing <- term() do
-        if (is_float(thing) or is_integer(thing)) and thing > 0 do
+        if (is_float(thing) or is_integer(thing)) and thing >= 0 do
           assert {:ok, 1.0 * thing} == Parsers.nonnegative_float(thing)
         else
           if !is_binary(thing) || Float.parse(thing) == :error do

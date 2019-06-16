@@ -226,14 +226,9 @@ defmodule Specify.Parsers do
   accepting either a positive integer, or the atom `:infinity`.
   """
   def timeout(raw) do
-    case integer(raw) do
-      {:ok, int} when is_integer(int) and int > 0 ->
+    case positive_integer(raw) do
+      {:ok, int} ->
         {:ok, int}
-
-      {:ok, int} when is_integer(int) ->
-        {:error,
-         "Passed in non-positive integer value `#{int}`. Timeouts have to be positive (or the special atom `:infinity`)"}
-
       {:error, _} ->
         case atom(raw) do
           {:ok, :infinity} ->
