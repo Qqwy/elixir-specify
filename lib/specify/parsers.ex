@@ -28,7 +28,7 @@ defmodule Specify.Parsers do
   def integer(binary) when is_binary(binary) do
     case Integer.parse(binary) do
       {int, ""} -> {:ok, int}
-      {int, rest} -> {:error, "the binary `#{binary}` cannot be parsed to an integer."}
+      {_int, _rest} -> {:error, "the binary `#{binary}` cannot be parsed to an integer."}
       :error -> {:error, "the binary `#{binary}` cannot be parsed to an integer."}
     end
   end
@@ -46,7 +46,7 @@ defmodule Specify.Parsers do
   def float(binary) when is_binary(binary) do
     case Float.parse(binary) do
       {float, ""} -> {:ok, float}
-      {float, rest} -> {:error, "the binary `#{binary}` cannot be parserd to  a float."}
+      {_float, _rest} -> {:error, "the binary `#{binary}` cannot be parserd to  a float."}
       :error -> {:error, "the binary `#{binary}` cannot be parserd to a float."}
     end
   end
