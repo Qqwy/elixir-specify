@@ -51,7 +51,7 @@ defmodule Specify.ParsersTest do
     end
 
     property "works on binaries representing non-negative integers, fails on binaries representing negative integers" do
-      check all int <- integer(), int >= 0 do
+      check all int <- integer() do
         str = to_string(int)
         if int >= 0 do
           assert Parsers.nonnegative_integer(str) === {:ok, int}
@@ -64,17 +64,17 @@ defmodule Specify.ParsersTest do
     property "fails on binaries representing non-negative integers with trailing garbage" do
       check all int <- integer(), postfix <- string(:printable), Integer.parse(postfix) == :error, postfix != "" do
         str = to_string(int)
-        assert {:error, _} = Parsers.integer(str <> postfix)
+        assert {:error, _} = Parsers.nonnegative_integer(str <> postfix)
       end
     end
 
     property "fails on non-integer terms" do
       check all thing <- term() do
         if is_integer(thing) do
-          assert {:ok, thing} = Parsers.integer(thing)
+          assert {:ok, thing} = Parsers.nonnegative_integer(thing)
         else
           if !is_binary(thing) || Integer.parse(thing) == :error do
-            assert {:error, _} = Parsers.integer(thing)
+            assert {:error, _} = Parsers.nonnegative_integer(thing)
           end
         end
       end
@@ -93,7 +93,7 @@ defmodule Specify.ParsersTest do
     end
 
     property "works on binaries representing positive integers, fails on binaries representing other integers" do
-      check all int <- integer(), int >= 0 do
+      check all int <- integer() do
         str = to_string(int)
         if int > 0 do
           assert Parsers.positive_integer(str) === {:ok, int}
@@ -106,17 +106,17 @@ defmodule Specify.ParsersTest do
     property "fails on binaries representing non-negative integers with trailing garbage" do
       check all int <- integer(), postfix <- string(:printable), Integer.parse(postfix) == :error, postfix != "" do
         str = to_string(int)
-        assert {:error, _} = Parsers.integer(str <> postfix)
+        assert {:error, _} = Parsers.positive_integer(str <> postfix)
       end
     end
 
     property "fails on non-integer terms" do
       check all thing <- term() do
         if is_integer(thing) do
-          assert {:ok, thing} = Parsers.integer(thing)
+          assert {:ok, thing} = Parsers.positive_integer(thing)
         else
           if !is_binary(thing) || Integer.parse(thing) == :error do
-            assert {:error, _} = Parsers.integer(thing)
+            assert {:error, _} = Parsers.positive_integer(thing)
           end
         end
       end
@@ -404,6 +404,53 @@ defmodule Specify.ParsersTest do
       check all list <- list_of(integer()) do
         str = inspect(list, limit: :infinity)
         assert {:ok, list} == Parsers.list(str, &Parsers.integer/1)
+      end
+    end
+  end
+
+  describe "timeout/1" do
+    test "works on `:infinity` (both as atom and as binary)" do
+      assert Parsers.timeout(:infinity) === {:ok, :infinity}
+      assert Parsers.timeout("infinity") === {:ok, :infinity}
+    end
+
+    property "works on positive integers, fails on other integers" do
+      check all int <- integer() do
+        if int > 0 do
+          assert Parsers.timeout(int) === {:ok, int}
+        else
+          assert {:error, _} = Parsers.timeout(int)
+        end
+      end
+    end
+
+    property "works on binaries representing positive integers, fails on binaries representing other integers" do
+      check all int <- integer() do
+        str = to_string(int)
+        if int > 0 do
+          assert Parsers.timeout(str) === {:ok, int}
+        else
+          assert {:error, _} = Parsers.timeout(str)
+        end
+      end
+    end
+
+    property "fails on binaries representing non-negative integers with trailing garbage" do
+      check all int <- integer(), postfix <- string(:printable), Integer.parse(postfix) == :error, postfix != "" do
+        str = to_string(int)
+        assert {:error, _} = Parsers.integer(str <> postfix)
+      end
+    end
+
+    property "fails on non-integer, non-`:infinity` terms" do
+      check all thing <- term() do
+        if thing == :infinity || (is_integer(thing) && thing > 0) do
+          assert {:ok, thing} = Parsers.timeout(thing)
+        else
+          if !is_binary(thing) || Integer.parse(thing) == :error do
+            assert {:error, _} = Parsers.timeout(thing)
+          end
+        end
       end
     end
   end

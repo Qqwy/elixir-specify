@@ -239,13 +239,13 @@ defmodule Specify.Parsers do
           {:ok, :infinity} ->
             {:ok, :infinity}
 
-          {:ok, other} ->
+          {:ok, _} ->
             {:error,
-             "#{raw} is neither a positive integer nor the special atom value `:infinity`"}
+             "#{inspect(raw)} is neither a positive integer nor the special atom value `:infinity`"}
 
-          {:error, msg} ->
+          {:error, _} ->
             {:error,
-             "`#{raw}` is neither a positive integer nor the special atom value `:infinity`"}
+             "`#{inspect(raw)}` is neither a positive integer nor the special atom value `:infinity`"}
         end
     end
   end
