@@ -163,6 +163,7 @@ If extra information is required about the configuration specification to write 
 
 ## Changelog
 
+- 0.4.5 - Fixes built-in `integer` and `float` parsers to not crash on input like `"10a"` (but instead return `{:error, _}`).
 - 0.4.4 - Fixes references to validation/parsing functions in documentation.
 - 0.4.2 - Finishes provider tests; bugfix for the MixEnv provider.
 - 0.4.1 - Improves documentation.
