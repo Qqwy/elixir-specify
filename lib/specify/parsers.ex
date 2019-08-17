@@ -244,4 +244,86 @@ defmodule Specify.Parsers do
         end
     end
   end
+
+  @doc """
+  Parses a Module-Function-Arity tuple.
+
+  Accepts it both as Elixir three-element tuple (where the first two elements are atoms, and the third is a nonnegative integer), or as string representation of the same.
+
+  Will also check and ensure that this function is actually defined.
+  """
+  def mfa(raw) when is_binary(raw) do
+    case Code.string_to_quoted(raw) do
+      {:ok, {:{}, _meta, [qmodule, qfunction, arity]}} ->
+        with {:ok, module} <- unquote_atom(qmodule),
+             {:ok, function} <- unquote_atom(qfunction) do
+          mfa({module, function, arity})
+        end
+      {:ok, _other} ->
+        {:error, "`#{inspect(raw)}`, while parseable as Elixir code, does not represent a Module-Function-Arity tuple."}
+      {:error, reason} ->
+        {:error, reason}
+    end
+  end
+
+  def mfa(mfa = {module, function, arity}) when is_atom(module) and is_atom(function) and is_integer(arity) and arity >= 0 do
+    if function_exported?(module, function, arity) do
+      {:ok, mfa}
+    else
+      {:error, "function #{module}.#{function}/#{arity} does not exist."}
+    end
+  end
+
+  def mfa(other_val) do
+    {:error, "`#{inspect(other_val)}` is not a Module-Function-Arity tuple"}
+  end
+
+  def unquote_atom(atom) when is_atom(atom) do
+    {:ok, atom}
+  end
+
+  def unquote_atom(aliased_atom = {:__aliases__, _, [atom]}) when is_atom(atom) do
+    IO.inspect(aliased_atom)
+      case Code.eval_quoted(aliased_atom) do
+        {result, []} ->
+          {:ok, result}
+        other ->
+          {:error, "`#{inspect(other)}` cannot be unquoted as an atom."}
+      end
+  end
+
+  def unquote_atom(other) do
+    {:error, "`#{inspect(other)}` cannot be unquoted as an atom."}
+  end
+
+  @doc """
+  Parses a function.
+
+  This can be a function capture, or a MFA (Module-Function-Arity) tuple, which will
+  be transformed into the `&Module.function/arity` capture.
+
+  (So in either case, you end up with a function value
+  that you can call using the dot operator, i.e. `.()` or `.(maybe, some, args)`).
+
+  ## String Contexts
+
+  For contexts in which values are specified as strings, the parser only supports the MFA format.
+  This is for security (and ease of parsing) reasons.
+  """
+  def function(raw) when is_binary(raw) or is_tuple(raw) do
+    with {:ok, {module, function, arity}} <- mfa(raw),
+      {fun, []} <- Code.eval_quoted(quote do &unquote(module).unquote(function)/unquote(arity) end) do
+      {:ok, fun}
+    end
+  end
+
+  def function(fun) when is_function(fun) do
+    {:ok, fun}
+  end
+
+  def function(other) do
+    {:error, "`#{other}` cannot be parsed as a function."}
+  end
+
+
 end
