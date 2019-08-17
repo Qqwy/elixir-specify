@@ -163,6 +163,7 @@ If extra information is required about the configuration specification to write 
 
 ## Changelog
 
+- 0.6 - Adds the `mfa` and `function` builtin parsers.`
 - 0.5 - Adds the `nonnegative_integer`, `positive_integer`, `nonnegative_float`, `positive_float` and `timeout` builtin parsers.
 - 0.4.5 - Fixes built-in `integer` and `float` parsers to not crash on input like `"10a"` (but instead return `{:error, _}`).
 - 0.4.4 - Fixes references to validation/parsing functions in documentation.
