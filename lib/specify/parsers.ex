@@ -283,7 +283,6 @@ defmodule Specify.Parsers do
   end
 
   def unquote_atom(aliased_atom = {:__aliases__, _, [atom]}) when is_atom(atom) do
-    IO.inspect(aliased_atom)
       case Code.eval_quoted(aliased_atom) do
         {result, []} ->
           {:ok, result}
@@ -324,6 +323,4 @@ defmodule Specify.Parsers do
   def function(other) do
     {:error, "`#{other}` cannot be parsed as a function."}
   end
-
-
 end

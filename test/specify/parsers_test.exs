@@ -454,4 +454,40 @@ defmodule Specify.ParsersTest do
       end
     end
   end
+
+  describe "mfa/1" do
+    property "works on MFA tuples of existing functions (and binaries of the same)" do
+      existing_mfas =
+        Enum.__info__(:functions)
+        |> Enum.map(fn {fun, arity} -> constant({Enum, fun, arity}) end)
+      check all mfa <- one_of(existing_mfas) do
+        assert {:ok, fun} = Parsers.mfa(mfa)
+        assert {:ok, fun} = Parsers.mfa(inspect(mfa))
+      end
+    end
+
+    property "Fails on MFA tuples of non-existing functions" do
+      check all module <- atom(:alphanumeric), fun <- atom(:alphanumeric), arity <- integer(), !function_exported?(module, fun, arity) do
+        assert {:error, res} = Parsers.mfa({module, fun, abs(arity)})
+      end
+    end
+  end
+
+  describe "function/1" do
+    property "works on MFA tuples of existing functions (and binaries of the same)" do
+      existing_mfas =
+        Enum.__info__(:functions)
+        |> Enum.map(fn {fun, arity} -> constant({Enum, fun, arity}) end)
+      check all mfa <- one_of(existing_mfas) do
+        assert {:ok, fun} = Parsers.mfa(mfa)
+        assert {:ok, fun} = Parsers.mfa(inspect(mfa))
+      end
+    end
+
+    property "Fails on MFA tuples of non-existing functions" do
+      check all module <- atom(:alphanumeric), fun <- atom(:alphanumeric), arity <- integer(), !function_exported?(module, fun, arity) do
+        assert {:error, res} = Parsers.mfa({module, fun, abs(arity)})
+      end
+    end
+  end
 end
