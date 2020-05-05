@@ -14,6 +14,7 @@ defmodule Specify.Options do
 
   """
 
+  @doc false
   def list_of_sources(sources) do
     res =
       Enum.reduce_while(sources, [], fn

@@ -2,6 +2,7 @@ defmodule SpecifyTest do
   use ExUnit.Case
   use ExUnitProperties
   import ExUnit.CaptureIO
+  import ExUnit.CaptureLog
 
   doctest Specify
 
@@ -81,6 +82,42 @@ defmodule SpecifyTest do
                age: &Specify.Parsers.integer/1,
                colors: {&Specify.Parsers.list/2, &Specify.Parsers.atom/1}
              } == BasicSpecifyExample.__specify__(:parsers)
+    end
+
+    test "Specify shows warnings on missing (required) sources" do
+      res = capture_log(fn ->
+        defmodule ConfigWithRequiredSource do
+          require Specify
+
+          Specify.defconfig [sources: [Specify.Provider.SystemEnv]] do
+            @doc "A name"
+            field(:name, :string)
+          end
+        end
+
+        conf = ConfigWithRequiredSource.load_explicit(name: "Floof")
+        assert conf = %{name: "Floof"}
+      end)
+
+      assert res =~ "While loading the configuration `SpecifyTest.ConfigWithRequiredSource`, the source `%Specify.Provider.SystemEnv{optional: false, prefix: nil}` could not be found."
+    end
+
+    test "Specify does not show warnings on missing (optional) sources" do
+      res = capture_log(fn ->
+        defmodule ConfigWithOptionalSource do
+          require Specify
+
+          Specify.defconfig [sources: [%Specify.Provider.SystemEnv{optional: true}]] do
+            @doc "A name"
+            field(:name, :string)
+          end
+        end
+
+        res = ConfigWithOptionalSource.load_explicit(name: "Floof")
+        assert res = %{name: "Floof"}
+      end)
+
+      assert res == ""
     end
   end
 

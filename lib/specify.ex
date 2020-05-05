@@ -39,6 +39,8 @@ defmodule Specify do
       - An atom representing one of the common parser function names in `Specify.Parsers` like `:integer`, `:string`, `:boolean` or `:term`.
       - A two-element tuple like `{:list, :atom}`. The first element represents the 'collection parser' which is an arity-2 function that takes the 'element parser' as second argument. The second element is the 'element parser'. Both of the elements listed in the tuple can also be either an atom, or a function capture with the correct arity. (like `{&YourAwesomeModule.fancy_collection/2, :integer}`).
 
+    `parser` defaults to `:string`.
+
     Supported field options are:
 
     - `default:`, supplies a default value to this field. If not set, the configuration field is set to be _required_.
@@ -46,7 +48,7 @@ defmodule Specify do
     You are highly encouraged to add a `@doc`umentation text above each and every field;
     these will be added to the configuration's module documentation.
     """
-    defmacro field(name, parser, options \\ []) do
+    defmacro field(name, parser \\ :string, options \\ []) do
       quote do
         field_documentation = Module.delete_attribute(__MODULE__, :doc)
 
@@ -352,7 +354,7 @@ defmodule Specify do
       {source, {:error, error}} ->
         case error do
           :not_found ->
-            Logger.error("""
+            Logger.warn("""
             While loading the configuration `#{inspect(config_module)}`, the source `#{
               inspect(source)
             }` could not be found.
@@ -361,7 +363,7 @@ defmodule Specify do
             """)
 
           :malformed ->
-            Logger.error("""
+            Logger.warn("""
             While loading the configuration `#{inspect(config_module)}`, found out that
             it was not possible to parse the configuration inside #{inspect(source)}.
             This usually indicates a grave problem!
