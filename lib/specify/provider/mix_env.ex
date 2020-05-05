@@ -18,7 +18,7 @@ defmodule Specify.Provider.MixEnv do
 
 
   """
-  defstruct [:application, :key]
+  defstruct [:application, :key, optional: false]
 
   @doc """
   By default, will try to use `Application.get_all_env(YourConfigModule)` to fetch the source's configuration.
@@ -41,8 +41,9 @@ defmodule Specify.Provider.MixEnv do
       %Pet{name: "John", kind: :dog}
 
   """
-  def new(application \\ nil, key \\ nil) do
-    %__MODULE__{application: application, key: key}
+  def new(application \\ nil, key \\ nil, options \\ []) do
+    optional = options[:optional] || false
+    %__MODULE__{application: application, key: key, optional: optional}
   end
 
   defimpl Specify.Provider do
@@ -54,7 +55,7 @@ defmodule Specify.Provider.MixEnv do
       {:ok, Enum.into(Application.get_all_env(application), %{})}
     end
 
-    def load(%Specify.Provider.MixEnv{application: application, key: key}, _module) do
+    def load(%Specify.Provider.MixEnv{application: application, key: key, optional: optional}, _module) do
       case Application.get_env(
              application,
              key,
@@ -67,7 +68,11 @@ defmodule Specify.Provider.MixEnv do
           {:ok, Enum.into(list, %{})}
 
         :there_is_no_specify_configuration_in_this_application_environment! ->
-          {:error, :not_found}
+          if optional do
+            {:ok, %{}}
+          else
+            {:error, :not_found}
+          end
 
         _other ->
           {:error, :malformed}

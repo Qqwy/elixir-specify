@@ -1,6 +1,4 @@
 defmodule Specify.Provider.Process do
-  defstruct [:key]
-
   @moduledoc """
   A Configuration Provider source based on the current process' Process Dictionary.
 
@@ -19,6 +17,8 @@ defmodule Specify.Provider.Process do
       end
   """
 
+  defstruct [:key, optional: false]
+
   @doc """
   By default, will try to use `Process.get(YourModule)` to fetch the source's configuration.
   A different key can be used by supplying a different `key` argument.
@@ -32,8 +32,9 @@ defmodule Specify.Provider.Process do
       %Pet{name: "John", kind: :dog}
   """
 
-  def new(key \\ nil) do
-    %__MODULE__{key: key}
+  def new(key \\ nil, options \\ []) do
+    optional = options[:optional] || false
+    %__MODULE__{key: key, optional: optional}
   end
 
   defimpl Specify.Provider do

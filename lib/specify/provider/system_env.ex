@@ -37,26 +37,27 @@ defmodule Specify.Provider.SystemEnv do
       %Pet{name: "John", kind: :dog}
 
   """
-  defstruct [:prefix]
+  defstruct [:prefix, optional: false]
 
   @doc """
 
   """
-  def new(prefix \\ nil) do
-    %__MODULE__{prefix: prefix}
+  def new(prefix \\ nil, options \\ []) do
+    optional = options[:optional] || false
+    %__MODULE__{prefix: prefix, optional: optional}
   end
 
   defimpl Specify.Provider do
-    def load(%Specify.Provider.SystemEnv{prefix: nil}, module) do
+    def load(provider = %Specify.Provider.SystemEnv{prefix: nil}, module) do
       capitalized_prefix =
         module
         |> Macro.to_string()
         |> String.upcase()
 
-      load(%Specify.Provider.SystemEnv{prefix: capitalized_prefix}, module)
+      load(%Specify.Provider.SystemEnv{provider | prefix: capitalized_prefix}, module)
     end
 
-    def load(%Specify.Provider.SystemEnv{prefix: prefix}, module) do
+    def load(%Specify.Provider.SystemEnv{prefix: prefix, optional: optional}, module) do
       full_env = System.get_env()
 
       res =
@@ -72,7 +73,11 @@ defmodule Specify.Provider.SystemEnv do
         end)
 
       if res == %{} do
-        {:error, :not_found}
+        if optional do
+          {:ok, %{}}
+        else
+          {:error, :not_found}
+        end
       else
         {:ok, res}
       end
