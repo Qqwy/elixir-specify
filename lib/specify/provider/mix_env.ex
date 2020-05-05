@@ -47,12 +47,26 @@ defmodule Specify.Provider.MixEnv do
   end
 
   defimpl Specify.Provider do
-    def load(%Specify.Provider.MixEnv{application: nil, key: nil}, module) do
-      {:ok, Enum.into(Application.get_all_env(module), %{})}
+    def load(%Specify.Provider.MixEnv{application: nil, key: nil, optional: optional}, module) do
+      res =  Enum.into(Application.get_all_env(module), %{})
+
+      case {Enum.empty?(res), optional} do
+        {true, false} ->
+          {:error, :not_found}
+        _ ->
+          {:ok, res}
+      end
     end
 
-    def load(%Specify.Provider.MixEnv{application: application, key: nil}, _module) do
-      {:ok, Enum.into(Application.get_all_env(application), %{})}
+    def load(%Specify.Provider.MixEnv{application: application, key: nil, optional: optional}, _module) do
+      res = Enum.into(Application.get_all_env(application), %{})
+
+      case {Enum.empty?(res), optional} do
+        {true, false} ->
+          {:error, :not_found}
+        _ ->
+          {:ok, res}
+      end
     end
 
     def load(%Specify.Provider.MixEnv{application: application, key: key, optional: optional}, _module) do

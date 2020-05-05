@@ -84,41 +84,46 @@ defmodule SpecifyTest do
              } == BasicSpecifyExample.__specify__(:parsers)
     end
 
-    test "Specify shows warnings on missing (required) sources" do
-      res = capture_log(fn ->
-        defmodule ConfigWithRequiredSource do
-          require Specify
+    for provider <- [Specify.Provider.SystemEnv, Specify.Provider.MixEnv, Specify.Provider.Process] do
+      @provider provider
+      test "Specify shows warnings on missing (required) sources for #{@provider}" do
+        res = capture_log(fn ->
+          defmodule ConfigWithRequiredSource do
+            require Specify
 
-          Specify.defconfig [sources: [Specify.Provider.SystemEnv]] do
-            @doc "A name"
-            field(:name, :string)
+            Specify.defconfig do
+              @doc "A name"
+              field(:name, :string)
+            end
           end
-        end
 
-        conf = ConfigWithRequiredSource.load_explicit(name: "Floof")
-        assert conf = %{name: "Floof"}
-      end)
+          conf = ConfigWithRequiredSource.load_explicit(%{name: "Floof"}, sources: [@provider])
+          assert %{name: "Floof"} = conf
+        end)
 
-      assert res =~ "While loading the configuration `SpecifyTest.ConfigWithRequiredSource`, the source `%Specify.Provider.SystemEnv{optional: false, prefix: nil}` could not be found."
+        assert res =~ "While loading the configuration `SpecifyTest.ConfigWithRequiredSource`, the source `%#{inspect(@provider)}"
+        assert res =~ "could not be found."
+      end
+
+      test "Specify does not show warnings on missing (optional) sources for #{@provider}" do
+        res = capture_log(fn ->
+          defmodule ConfigWithOptionalSource do
+            require Specify
+
+            Specify.defconfig [sources: [%Specify.Provider.SystemEnv{optional: true}]] do
+              @doc "A name"
+              field(:name, :string)
+            end
+          end
+
+          conf = ConfigWithOptionalSource.load_explicit(%{name: "Floof"}, sources: [@provider])
+          assert %{name: "Floof"} = conf
+        end)
+
+        assert res == ""
+      end
     end
 
-    test "Specify does not show warnings on missing (optional) sources" do
-      res = capture_log(fn ->
-        defmodule ConfigWithOptionalSource do
-          require Specify
-
-          Specify.defconfig [sources: [%Specify.Provider.SystemEnv{optional: true}]] do
-            @doc "A name"
-            field(:name, :string)
-          end
-        end
-
-        res = ConfigWithOptionalSource.load_explicit(name: "Floof")
-        assert res = %{name: "Floof"}
-      end)
-
-      assert res == ""
-    end
   end
 
   describe "parsers are properly called" do
