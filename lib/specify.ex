@@ -419,7 +419,7 @@ defmodule Specify do
 
         ### #{name}
 
-        #{documentation || "ASDF"}
+        #{documentation}
 
         #{parser_doc(parser, original_parser)}
         """
@@ -429,7 +429,7 @@ defmodule Specify do
             {:ok, val} ->
               """
               #{doc}
-              Defaults to `#{inspect(val)}`.
+              Defaults to#{clever_prettyprint(val)}
               """
 
             :error ->
@@ -450,6 +450,23 @@ defmodule Specify do
 
     #{acc}
     """
+  end
+
+  # Render a multiline Markdown code block if `value` is large enough
+  # to be pretty-printed across multiple lines.
+  # otherwise, render an inline Markdown code block.
+  defp clever_prettyprint(value) do
+    inspected = Kernel.inspect(value, printable_limit: :infinity, limit: :infinity, width: 80, pretty: true)
+    if String.contains?(inspected, "\n") do
+      """
+      :
+      ```
+      #{inspected}
+      ```
+      """
+    else
+      " `#{inspected}`."
+    end
   end
 
   defp parser_doc(parser, original_parser) do
