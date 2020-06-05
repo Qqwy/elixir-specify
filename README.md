@@ -26,7 +26,7 @@ You can install Specify by adding `specify` to your list of dependencies in `mix
 ```elixir
 def deps do
   [
-    {:specify, "~> 0.4.0"}
+    {:specify, "~> 0.7.0"}
   ]
 end
 ```
