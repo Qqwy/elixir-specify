@@ -460,7 +460,7 @@ defmodule Specify do
   defp clever_prettyprint(f) when is_function(f) do
     "&" <> f_str = inspect(f)
 
-    "`#{f_str}`"
+    "`#{f_str}`."
   end
 
   defp clever_prettyprint(value) do
