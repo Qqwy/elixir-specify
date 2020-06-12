@@ -498,6 +498,21 @@ defmodule Specify.ParsersTest do
     end
   end
 
+  describe "option/1" do
+    property "works on option of arbitrary term" do
+      check all option <- tuple({atom(:alphanumeric), supported_terms_generator()}) do
+        assert {:ok, option} == Parsers.option(option)
+      end
+    end
+
+    property "works on strings representing options of arbitrary terms" do
+      check all option <- tuple({atom(:alphanumeric), supported_terms_generator()}) do
+        str = inspect(option, limit: :infinity)
+        assert {:ok, option} == Parsers.option(str)
+      end
+    end
+  end
+
   defp supported_terms_generator(max_depth \\ 2) do
     generators = [
       boolean(),
