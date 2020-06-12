@@ -455,6 +455,14 @@ defmodule Specify do
   # Render a multiline Markdown code block if `value` is large enough
   # to be pretty-printed across multiple lines.
   # otherwise, render an inline Markdown code block.
+  # Functions are an exception: there are always on their own line to
+  # make then clickable.
+  defp clever_prettyprint(f) when is_function(f) do
+    "&" <> f_str = inspect(f)
+
+    "`#{f_str}`."
+  end
+
   defp clever_prettyprint(value) do
     inspected = Kernel.inspect(value, printable_limit: :infinity, limit: :infinity, width: 80, pretty: true)
     if String.contains?(inspected, "\n") do
