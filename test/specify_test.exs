@@ -65,7 +65,7 @@ defmodule SpecifyTest do
                  require Specify
 
                  Specify.defconfig do
-                   field(:name, default: "Slatibartfast")
+                   field(:name, :string, default: "Slatibartfast")
                  end
                end
              end) =~
@@ -161,6 +161,33 @@ defmodule SpecifyTest do
         assert_raise(MyCustomError, fn ->
           ParsingExample.load_explicit([size: thing], parsing_error: MyCustomError)
         end)
+      end
+    end
+  end
+
+  describe "multi-parser is properly called" do
+    defmodule MultiParserExample do
+      require Specify
+
+      Specify.defconfig do
+        @doc false
+        field(:value, [:integer, :float, :boolean], default: "13.37")
+      end
+    end
+
+    test "Parser is called with default" do
+      assert MultiParserExample.load() == %MultiParserExample{value: 13.37}
+    end
+
+    property "parser is called with value" do
+      check all thing <- term() do
+        if is_integer(thing) or is_float(thing) or is_boolean(thing) do
+          assert %MultiParserExample{value: thing} = MultiParserExample.load_explicit(value: thing)
+        else
+          assert_raise(Specify.ParsingError, fn ->
+            MultiParserExample.load_explicit(value: thing)
+          end)
+        end
       end
     end
   end
