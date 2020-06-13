@@ -358,6 +358,50 @@ defmodule Specify.Parsers do
     {:error, "the term `#{inspect(term)}` cannot be parsed to an option."}
   end
 
+  @doc """
+  Parses an atom that must be a member of a list of atoms
+
+  The parsing of the atom is performed by the `atom/1` function, and follows the
+  same rules.
+
+  ### Example
+
+      field :confirmation, {:one_of_atoms, [:yes, :no, :maybe]}
+  """
+  def one_of_atoms(term, allowed_atoms) do
+    case atom(term) do
+      {:ok, atom} ->
+        if atom in allowed_atoms do
+          {:ok, atom}
+        else
+          {:error, "Provided `#{inspect(atom)}` atom is not one of: #{inspect(allowed_atoms)}"}
+        end
+
+      {:error, _} = error ->
+        error
+    end
+  end
+
+  @doc """
+  Parses an string that must be a member of a list of strings
+
+  The parsing of the string is performed by the `string/1` function, and follows the
+  same rules.
+  """
+  def one_of_strings(term, allowed_strings) do
+    case string(term) do
+      {:ok, string} ->
+        if string in allowed_strings do
+          {:ok, string}
+        else
+          {:error, "Provided `\"#{string}\"` string is not one of: #{inspect(allowed_strings)}"}
+        end
+
+      {:error, _} = error ->
+        error
+    end
+  end
+
   defp string_to_term(binary, opts \\ []) when is_binary(binary) do
     case Code.string_to_quoted(binary, opts) do
       {:ok, ast} ->

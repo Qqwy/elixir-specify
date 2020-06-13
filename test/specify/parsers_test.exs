@@ -498,6 +498,25 @@ defmodule Specify.ParsersTest do
     end
   end
 
+  describe "one_of_atoms/2" do
+    test "works on atoms" do
+      assert {:ok, :atom2} == Parsers.one_of_atoms(:atom2, [:atom1, :atom2, :atom3])
+      assert {:error, _} = Parsers.one_of_atoms(:atom4, [:atom1, :atom2, :atom3])
+    end
+
+    test "works on strings" do
+      assert {:ok, :atom2} == Parsers.one_of_atoms("atom2", [:atom1, :atom2, :atom3])
+      assert {:error, _} = Parsers.one_of_atoms("atom4", [:atom1, :atom2, :atom3])
+    end
+  end
+
+  describe "one_of_strings/2" do
+    test "works on strings" do
+      assert {:ok, "str2"} == Parsers.one_of_strings("str2", ["str1", "str2", "str3"])
+      assert {:error, _} = Parsers.one_of_strings("str4", ["str1", "str2", "str3"])
+    end
+  end
+
   describe "option/1" do
     property "works on option of arbitrary term" do
       check all option <- tuple({atom(:alphanumeric), supported_terms_generator()}) do
