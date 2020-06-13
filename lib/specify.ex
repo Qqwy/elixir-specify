@@ -280,8 +280,27 @@ defmodule Specify do
     end
   end
 
-  defp construct_parser({collection_parser, elem_parser}) do
-    fn thing -> collection_parser.(thing, elem_parser) end
+  defp construct_parser(parser_list) when is_list(parser_list) do
+    parser_funs = Enum.map(parser_list, &construct_parser(&1))
+
+    fn thing -> Enum.find_value(
+        parser_funs,
+        {:error, "No validating parser found"},
+        fn parser_fun ->
+          case parser_fun.(thing) do
+            {:ok, val} ->
+              {:ok, val}
+
+            {:error, _} ->
+              nil
+          end
+        end
+      )
+    end
+  end
+
+  defp construct_parser({parser, elem_parser}) do
+    fn thing -> parser.(thing, elem_parser) end
   end
 
   defp construct_parser(elem_parser) do
@@ -486,7 +505,7 @@ defmodule Specify do
         (Specified as `#{inspect(atom)}`)
         """
 
-      {collection_parser, parser} ->
+      {collection_parser, parser} when collection_parser in [:list] ->
         """
         Validated/parsed by calling `fn thing -> (#{
           Macro.to_string(normalize_parser(collection_parser, 2)) |> String.trim_leading("&")
@@ -575,8 +594,12 @@ defmodule Specify do
     end
   end
 
-  defp normalize_parser({collection_parser, elem_parser}, _arity) do
+  defp normalize_parser({collection_parser, elem_parser}, _arity) when is_atom(elem_parser) do
     {normalize_parser(collection_parser, 2), normalize_parser(elem_parser, 1)}
+  end
+
+  defp normalize_parser({parser, parser_params}, _arity) do
+    {normalize_parser(parser, 2), parser_params}
   end
 
   defp normalize_parser(other, _arity), do: other
