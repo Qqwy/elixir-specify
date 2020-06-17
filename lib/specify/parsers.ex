@@ -221,6 +221,10 @@ defmodule Specify.Parsers do
     end
   end
 
+  def list(term, _) do
+    {:error, "`#{inspect(term)}` does not represent an Elixir list."}
+  end
+
   @doc """
   Allows to pass in a 'timeout' which is a common setting for OTP-related features,
   accepting either a positive integer, or the atom `:infinity`.
