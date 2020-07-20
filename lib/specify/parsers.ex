@@ -206,7 +206,7 @@ defmodule Specify.Parsers do
   end
 
   def list(binary, elem_parser) when is_binary(binary) do
-    case Code.string_to_quoted(binary, existing_atoms_only: true) do
+    case string_to_term(binary) do
       {:ok, list_ast} when is_list(list_ast) ->
         list_ast
         |> Enum.map(&Macro.expand(&1, __ENV__))
@@ -257,12 +257,10 @@ defmodule Specify.Parsers do
   Will also check and ensure that this function is actually defined.
   """
   def mfa(raw) when is_binary(raw) do
-    case Code.string_to_quoted(raw) do
-      {:ok, {:{}, _meta, [qmodule, qfunction, arity]}} ->
-        with {:ok, module} <- unquote_atom(qmodule),
-             {:ok, function} <- unquote_atom(qfunction) do
-          mfa({module, function, arity})
-        end
+    case string_to_term(raw) do
+      {:ok, {module, function, arity}}
+        when is_atom(module) and is_atom(function) and is_integer(arity) ->
+        mfa({module, function, arity})
       {:ok, _other} ->
         {:error, "`#{inspect(raw)}`, while parseable as Elixir code, does not represent a Module-Function-Arity tuple."}
       {:error, reason} ->
@@ -327,4 +325,33 @@ defmodule Specify.Parsers do
   def function(other) do
     {:error, "`#{other}` cannot be parsed as a function."}
   end
+
+  defp string_to_term(binary, opts \\ [existing_atoms_only: true]) when is_binary(binary) do
+    case Code.string_to_quoted(binary, opts) do
+      {:ok, ast} ->
+        {:ok, ast_to_term(ast)}
+
+      {:error, _} = error ->
+        error
+    end
+  rescue
+    e ->
+      {:error, e}
+  end
+
+  defp ast_to_term(term) when is_atom(term), do: term
+  defp ast_to_term(term) when is_integer(term), do: term
+  defp ast_to_term(term) when is_float(term), do: term
+  defp ast_to_term(term) when is_binary(term), do: term
+  defp ast_to_term([]), do: []
+  defp ast_to_term([h | t]), do: [ast_to_term(h) | ast_to_term(t)]
+  defp ast_to_term({a, b}), do: {ast_to_term(a), ast_to_term(b)}
+  defp ast_to_term({:{}, _place, terms}),
+    do: terms |> Enum.map(&ast_to_term/1) |> List.to_tuple()
+  defp ast_to_term({:%{}, _place, terms}),
+    do: for {k, v} <- terms, into: %{}, do: {ast_to_term(k), ast_to_term(v)}
+  defp ast_to_term(aliased = {:__aliases__, _, _}), do: Macro.expand(aliased, __ENV__)
+  defp ast_to_term({:+, _, [number]}), do: number
+  defp ast_to_term({:-, _, [number]}), do: -number
+  defp ast_to_term(ast), do: raise ArgumentError, message: "invalid term `#{inspect(ast)}`"
 end

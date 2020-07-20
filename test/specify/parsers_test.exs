@@ -406,6 +406,13 @@ defmodule Specify.ParsersTest do
         assert {:ok, list} == Parsers.list(str, &Parsers.integer/1)
       end
     end
+
+    property "works on strings representing lists of arbitrary terms" do
+      check all list <- list_of(supported_terms_generator()) do
+        str = inspect(list, limit: :infinity)
+        assert {:ok, list} == Parsers.list(str, &Parsers.term/1)
+      end
+    end
   end
 
   describe "timeout/1" do
@@ -489,5 +496,48 @@ defmodule Specify.ParsersTest do
         assert {:error, res} = Parsers.mfa({module, fun, abs(arity)})
       end
     end
+  end
+
+  defp supported_terms_generator(max_depth \\ 2) do
+    generators = [
+      boolean(),
+      float(),
+      integer(),
+      string(:ascii),
+      string(:alphanumeric),
+      string(:printable),
+    ]
+
+    generators
+    |> maybe_add_tuple_generator(max_depth)
+    |> maybe_add_map_generator(max_depth)
+    |> one_of()
+  end
+
+  defp maybe_add_tuple_generator(generators, 0) do
+    generators
+  end
+
+  defp maybe_add_tuple_generator(generators, max_depth) do
+    [
+      (for _ <- 1..Enum.random(1..5), do: supported_terms_generator(max_depth - 1))
+      |> List.to_tuple()
+      |> tuple
+    | generators]
+  end
+
+  defp maybe_add_map_generator(generators, 0) do
+    generators
+  end
+
+  defp maybe_add_map_generator(generators, max_depth) do
+    [
+      map_of(
+        supported_terms_generator(max_depth - 1),
+        supported_terms_generator(max_depth - 1),
+        max_length: 5
+      )
+      | generators
+    ]
   end
 end
