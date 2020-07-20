@@ -82,6 +82,15 @@ Cosette.CastleOnACloud.load
     (specify) lib/specify.ex:147: Specify.load/2
 ```
 
+### Multiple parsers
+
+It is possible to specify several parsers for a unique field, using a list of parsers. They
+will be tried consecutively in list order. For instance:
+
+```elixir
+field :some_field, [:string, :boolean], default: true
+```
+
 ### Loading from Sources
 
 Loading from another source is easy:

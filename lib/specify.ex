@@ -280,6 +280,25 @@ defmodule Specify do
     end
   end
 
+  defp construct_parser(parser_list) when is_list(parser_list) do
+    parser_funs = Enum.map(parser_list, &construct_parser(&1))
+
+    fn thing -> Enum.find_value(
+        parser_funs,
+        {:error, "No validating parser found"},
+        fn parser_fun ->
+          case parser_fun.(thing) do
+            {:ok, val} ->
+              {:ok, val}
+
+            {:error, _} ->
+              nil
+          end
+        end
+      )
+    end
+  end
+
   defp construct_parser({collection_parser, elem_parser}) do
     fn thing -> collection_parser.(thing, elem_parser) end
   end
@@ -563,6 +582,10 @@ defmodule Specify do
   # Replaces simplified atom parsers with
   # an actual reference to the parser function in `Specify.Parsers`.
   defp normalize_parser(parser, arity \\ 1)
+
+  defp normalize_parser(parsers, _arity) when is_list(parsers) do
+    Enum.map(parsers, &normalize_parser(&1))
+  end
 
   defp normalize_parser(parser, arity) when is_atom(parser) do
     case Specify.Parsers.__info__(:functions)[parser] do
