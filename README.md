@@ -172,6 +172,9 @@ If extra information is required about the configuration specification to write 
 
 ## Changelog
 
+- 0.9.0 - Allows multi-value parsers by specifying a list of parsers. Thank you, @tanguilp!
+- 0.8.0 - Makes string-parsers work on more of Elixir's builtin terms including lists and maps of other types (including lists and maps themselves). Thank you, @tanguilp!
+- 0.7.2 - Makes functions clickable in the generated documentation. Thank you, @tanguilp!
 - 0.7.1 - Pretty-prints long default values in a multi-line code block in the documentation (#2).
 - 0.7 - Adds an `optional` key to the built-in providers. They will only return `{error, :not_found}` if they are not set to optional. Also adds two new ways to indicate sources, which are helpful in environments where you do not have access to the structs directly (such as `Mix.Config` or the newer `Elixir.Config` files.)
 - 0.6 - Adds the `mfa` and `function` builtin parsers.

@@ -206,7 +206,7 @@ defmodule Specify.Parsers do
   end
 
   def list(binary, elem_parser) when is_binary(binary) do
-    case string_to_term(binary, existing_atoms_only: true) do
+    case string_to_term(binary) do
       {:ok, list_ast} when is_list(list_ast) ->
         list_ast
         |> Enum.map(&Macro.expand(&1, __ENV__))
@@ -406,7 +406,7 @@ defmodule Specify.Parsers do
     end
   end
 
-  defp string_to_term(binary, opts \\ []) when is_binary(binary) do
+  defp string_to_term(binary, opts \\ [existing_atoms_only: true]) when is_binary(binary) do
     case Code.string_to_quoted(binary, opts) do
       {:ok, ast} ->
         {:ok, ast_to_term(ast)}
