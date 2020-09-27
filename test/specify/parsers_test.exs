@@ -407,6 +407,13 @@ defmodule Specify.ParsersTest do
       end
     end
 
+    property "works on keyword lists (list of options)" do
+      check all list <- list_of(tuple({atom(:alphanumeric), supported_terms_generator()})) do
+        str = inspect(list, limit: :infinity)
+        assert {:ok, list} == Parsers.list(str, &Parsers.option/1)
+      end
+    end
+
     property "works on strings representing lists of arbitrary terms" do
       check all list <- list_of(supported_terms_generator()) do
         str = inspect(list, limit: :infinity)
@@ -494,6 +501,21 @@ defmodule Specify.ParsersTest do
     property "Fails on MFA tuples of non-existing functions" do
       check all module <- atom(:alphanumeric), fun <- atom(:alphanumeric), arity <- integer(), !function_exported?(module, fun, arity) do
         assert {:error, res} = Parsers.mfa({module, fun, abs(arity)})
+      end
+    end
+  end
+
+  describe "option/1" do
+    property "works on option of arbitrary term" do
+      check all option <- tuple({atom(:alphanumeric), supported_terms_generator()}) do
+        assert {:ok, option} == Parsers.option(option)
+      end
+    end
+
+    property "works on strings representing options of arbitrary terms" do
+      check all option <- tuple({atom(:alphanumeric), supported_terms_generator()}) do
+        str = inspect(option, limit: :infinity)
+        assert {:ok, option} == Parsers.option(str)
       end
     end
   end

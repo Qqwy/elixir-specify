@@ -326,6 +326,39 @@ defmodule Specify.Parsers do
     {:error, "`#{other}` cannot be parsed as a function."}
   end
 
+  @doc """
+  Parses an option.
+  An option is a 2-tuple whose first element is an atom, and the second an arbitrary term.
+  The following terms are options:
+  - `{:a, :b}`
+  - `{MyApp.Module, "Hellow, world!"}`
+  - `{:some_atom, %{[] => {1, 2, 3, 4, 5}}}`
+  In the case a binary string was passed, this parser uses `Code.string_to_quoted` under the
+  hood to parse the terms.
+  It can be convenently used alongside the list parser to check for keyword list:
+  `{:list, :option}`.
+  """
+  def option(raw) when is_binary(raw) do
+    case string_to_term(raw, existing_atoms_only: true) do
+      {:ok, term} when not is_binary(term) ->
+        option(term)
+
+      {:ok, term} ->
+        {:error, "the term `#{inspect(term)}` cannot be parsed to an option."}
+
+      {:error, _} = error ->
+        error
+    end
+  end
+
+  def option({key, value}) when is_atom(key) do
+    {:ok, {key, value}}
+  end
+
+  def option(term) do
+    {:error, "the term `#{inspect(term)}` cannot be parsed to an option."}
+  end
+
   defp string_to_term(binary, opts \\ [existing_atoms_only: true]) when is_binary(binary) do
     case Code.string_to_quoted(binary, opts) do
       {:ok, ast} ->
