@@ -172,6 +172,7 @@ If extra information is required about the configuration specification to write 
 
 ## Changelog
 
+- 0.10.0 - Adds an `option({atom, term})` parser that can be used to parse for instance keyword lists. Thank you, @tanguilp!
 - 0.9.0 - Allows multi-value parsers by specifying a list of parsers. Thank you, @tanguilp!
 - 0.8.0 - Makes string-parsers work on more of Elixir's builtin terms including lists and maps of other types (including lists and maps themselves). Thank you, @tanguilp!
 - 0.7.2 - Makes functions clickable in the generated documentation. Thank you, @tanguilp!
